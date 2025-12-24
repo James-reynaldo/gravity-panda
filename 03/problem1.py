@@ -98,78 +98,45 @@ def straight_push(cfg: ry.Config) -> ry.KOMO:
     # Compute push parameters
     table = cfg.getFrame("table")
     table_pos = table.getPosition()
-    table_height = table.getSize()[2] * .5
+    table_height = table_pos[2]
+    print(f"Table height: {table_height}")
     ball_position = cfg.getFrame("ball").getPosition()
-    # goal_post1 = cfg.getFrame("post1").getPosition()
-    # target_position = np.array([
-    #     goal_post1[0],
-    #     (cfg.getFrame("post2").getPosition()[1] + goal_post1[1]) / 2,
-    #     ball_position[2]
-    # ])
     ball_shape = cfg.getFrame("ball").getSize()
 
-    # print(f"end target position: {target_position}")
-    # print(f"ball position: {ball_position}")
-    # 2.: Ball push
-    # This code snippet should formulate an optimization problem to push a box along a straight line
-
     #### BEGIN SOLUTION
-    # Get current Gripper position
+    # Get gripper frame
     gripper = "l_gripper"
-    gripper_frame = cfg.getFrame(gripper)
-    gripper_start_position = cfg.getJointState().copy()
-   
-    # Define push vector (direction) 
-    # dir_push_2d = target_position[:2] - ball_position[:2]
-    # dir_push = np.append(dir_push_2d, 0.0)
-    # length_push = np.linalg.norm(dir_push_2d)
-    # unit_push_2d = dir_push_2d / length_push
-    # unit_push = np.append(unit_push_2d, 0.0)
 
-    # push_direction_matrix = 1e2 * (np.eye(3) - np.outer(unit_push, unit_push))
- 
-    # new_start = ball_position - unit_push * ball_shape * 5
-    # new_goal = target_position - unit_push * ball_shape * 8
+    
+    # Get current gripper position
+    current_pos = cfg.getFrame(gripper).getPosition()
+    print(f"Current gripper position: {current_pos}")
+    
+    # Create target position with z=1.0
+    target_pos = np.array([current_pos[0], current_pos[1], table_height + 0.1])
+    print(f"Target gripper position: {target_pos}")
 
-    # Create Marker to show start and goal positions
-    # cfg.addFrame('unit_push'). setShape(ry.ST.marker, [.1]) .setPosition(unit_push)
-    # cfg.addFrame('start'). setShape(ry.ST.marker, [.1]) .setPosition(new_start)
-    # cfg.addFrame('goal'). setShape(ry.ST.marker, [.1]) .setPosition(new_goal)
-
-    # # Disable necessary contacts in optimization
-    # cfg.getFrame("ball").setContact(0)
-    # cfg.getFrame("post1").setContact(0)  
-    # cfg.getFrame("post2").setContact(0)
+    cfg.addFrame("target_pos")
+    cfg.getFrame("target_pos").setPosition(target_pos)
+    cfg.getFrame("target_pos").setShape(ry.ST.marker, 0.02)
+    
 
     # Setup komo
     komo = ry.KOMO()
     komo.setConfig(cfg, True)
-    komo.setTiming(phases=2, slicesPerPhase=12, durationPerPhase=1,kOrder=1)
-  
-    # Add constraints
-    # komo.addControlObjective([], 1, 1e0) # Penalize velocity
-    # komo.addControlObjective([], 0, 1e-1) # Penalize jpint motion magnitude
+    komo.setTiming(phases=1, slicesPerPhase=12, durationPerPhase=1.0, kOrder=1)
 
-    # komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq, [1e1])    # Do not exceed robots joint limits
-    # komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)
+    # Collision avoidance
+    komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)
+    komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq)
 
-    # # komo.addObjective([1,2], ry.FS.vectorXDiff, [gripper, 'goal'], ry.OT.eq, [1e1])
-    # komo.addObjective([1, 2], ry.FS.scalarProductYZ, ['start', gripper], ry.OT.eq, [1e1], [0])
-    # komo.addObjective([1, 2], ry.FS.scalarProductXZ, ['start', gripper], ry.OT.eq, [1e1], [0])
-    # komo.addObjective([1], ry.FS.scalarProductXX, ['unit_push', gripper], ry.OT.eq, [1e1], [0])
+    komo.addObjective([], ry.FS.positionDiff, ['l_gripper', 'target_pos'], ry.OT.eq, [1e1])
 
-    # # Only let gripper move in push direction
-    # komo.addObjective([1, 2], ry.FS.positionRel, [gripper, "start"], ry.OT.eq, push_direction_matrix, [0., 0., 0.])
-    # komo.addObjective([1, 2], ry.FS.vectorY, [gripper], ry.OT.eq, [1e1], unit_push)
-
-    # # Phase 1: Start contact
-    # komo.addObjective([1], ry.FS.positionDiff, [gripper,'start'], ry.OT.eq, [1e1])
-
-    # # Phase 2: End contact (push complete)
-    # komo.addObjective([2], ry.FS.positionDiff, [gripper,'goal'], ry.OT.eq, [1e1])
-
-    #### END SOLUTION
-    # print(komo.report())
+    # Regularization: stay close to natural configuration
+    q_home = cfg.getJointState()
+    komo.addObjective([], ry.FS.jointState, [], ry.OT.sos, [1e-1], q_home)
+    # komo.addObjective([], ry.FS.scalarProductXX, ['l_gripper', 'target_pos'], ry.OT.eq, [1e1], [0])
+    # komo.addObjective([], ry.FS.scalarProductXZ, ['l_gripper', 'target_pos'], ry.OT.eq, [1e1], [0])
 
     return komo
 
@@ -235,12 +202,23 @@ def main(args):
         # Execution on botop
         else:
             bot = ry.BotOp(C=cfg, useRealRobot=args.real)
+            bot.wait(cfg, forKeyPressed=False, forTimeToEnd=True)
+            bot.moveTo(q_home)
+            # Close gripper
+            bot.gripperMove(ry.ArgWord._left, 0.)
+            bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
+            # Run reference path
+            times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+            bot.move(path, times)
+            bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
+
             cameras = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
             import threading
             import time
             
             stop_capture = False
             ball_positions = []  # Store detected ball positions
+
 
             def capture_loop():
                 # plt.ion()  # Interactive mode on
@@ -294,7 +272,6 @@ def main(args):
                             for i in circles[0, :]:
                                 u, v = i[0], i[1]
                                 cam_depth = (BALL_DIAMETER*fx)/(2*i[2])  # Z = (D*fx)/(2*r)
-                                # print(f"Ball pixel coordinates: u:{u} v:{v}, depth:{cam_depth:.2f}m")
                                 x = (u - cx) * cam_depth / fx
                                 y = (v - cy) * cam_depth / fy
                                 # Store position
