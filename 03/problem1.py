@@ -4,6 +4,7 @@ import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 import cv2 as cv
+
 ##################
 from typing import Union
 BALL_DIAMETER = 0.063  # meters
@@ -13,6 +14,55 @@ def gen_scene_ball():
     cfg.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     cfg.delFrame("panda_collCameraWrist")
     cfg.addFile("assets/cfg0.g")
+
+    # Load STL file
+    from stl import mesh
+    your_mesh = mesh.Mesh.from_file("/home/aldo/Documents/Gravity_panda/gravity-panda/03/assets/Gravity_Panda_Project_Cup.stl")
+    
+
+    scale_factor = 0.001  # Scale from mm to m
+    your_mesh.vectors *= scale_factor
+    # Get vertices and triangles
+    vertices = your_mesh.vectors.reshape(-1, 3)  # Shape: (n*3, 3)
+    triangles = np.arange(len(vertices)).reshape(-1, 3)  # Shape: (n, 3)
+
+    # Add cup as STL mesh object
+    cup = cfg.addFrame("cup")
+    # cup.setShape(ry.ST.marker, 0.02)
+    cup.setMesh(vertices, triangles)
+    cup.setParent(cfg.getFrame("l_gripper"))
+    cup.setJoint(ry.JT.rigid)
+    cfg.attach('l_gripper','cup')
+    cup.setRelativePose([0, 0, -0.05, 0.5, 0.5, 0.5, 0.5])
+
+    # **Add coordinate axes to visualize the cup's frame**
+    axes = cfg.addFrame("cup_axes", "cup")  # Child of cup frame
+    axes.setShape(ry.ST.marker, [0.1])  # Size of axes (0.1m long)
+    axes.setRelativePose([0, 0, 0, 1, 0, 0, 0])  # Identity pose
+
+    #print joint names
+    joint_names = cfg.getJointNames()
+    print("Robot Joint Names:")
+    for name in joint_names:
+        print(name)
+
+    cfg.getFrame("world").setShape(ry.ST.marker, 0.01)
+    # print list of frames
+    frames = cfg.getFrames()
+    print("Frames in the configuration:")
+    for frame in frames:
+        print(f"- {frame.name}")
+
+    # Set the robot to the specified joint positions
+    joint_positions = [-0.0163, 0.0973, 0.0171, -2.4725, -0.0156, 2.5616, -0.7701]
+
+    cfg.setJointState(joint_positions)
+
+    finger1 = cfg.getFrame('l_panda_finger_joint1')
+
+    print(f"Finger 1 joint type: {finger1.getJointType()}")
+    q = cfg.getJointState()
+    print("Initial joint positions:", q)
     return cfg
 
 
@@ -106,19 +156,19 @@ def straight_push(cfg: ry.Config) -> ry.KOMO:
     #### BEGIN SOLUTION
     # Get gripper frame
     gripper = "l_gripper"
-
     
     # Get current gripper position
     current_pos = cfg.getFrame(gripper).getPosition()
+    cfg.getFrame(gripper).setShape(ry.ST.marker, 0.02)
     print(f"Current gripper position: {current_pos}")
     
     # Create target position with z=1.0
-    target_pos = np.array([current_pos[0], current_pos[1], table_height + 0.1])
+    target_pos = np.array([current_pos[0], current_pos[1], table_height + 0.2])
     print(f"Target gripper position: {target_pos}")
 
     cfg.addFrame("target_pos")
     cfg.getFrame("target_pos").setPosition(target_pos)
-    cfg.getFrame("target_pos").setShape(ry.ST.marker, 0.02)
+    # cfg.getFrame("target_pos").setShape(ry.ST.marker, 0.02)
     
 
     # Setup komo
@@ -135,8 +185,8 @@ def straight_push(cfg: ry.Config) -> ry.KOMO:
     # Regularization: stay close to natural configuration
     q_home = cfg.getJointState()
     komo.addObjective([], ry.FS.jointState, [], ry.OT.sos, [1e-1], q_home)
-    # komo.addObjective([], ry.FS.scalarProductXX, ['l_gripper', 'target_pos'], ry.OT.eq, [1e1], [0])
-    # komo.addObjective([], ry.FS.scalarProductXZ, ['l_gripper', 'target_pos'], ry.OT.eq, [1e1], [0])
+    komo.addObjective([], ry.FS.scalarProductXY, ['l_gripper', 'world'], ry.OT.eq, [1e1], [1])
+    komo.addObjective([], ry.FS.scalarProductYX, ['l_gripper', 'world'], ry.OT.eq, [1e1], [-1])
 
     return komo
 
@@ -202,15 +252,21 @@ def main(args):
         # Execution on botop
         else:
             bot = ry.BotOp(C=cfg, useRealRobot=args.real)
-            bot.wait(cfg, forKeyPressed=False, forTimeToEnd=True)
-            bot.moveTo(q_home)
-            # Close gripper
-            bot.gripperMove(ry.ArgWord._left, 0.)
-            bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
-            # Run reference path
-            times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
-            bot.move(path, times)
-            bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
+            # bot.wait(cfg, forKeyPressed=False, forTimeToEnd=True)
+            # bot.moveTo(q_home)
+            # # Close gripper
+            # bot.gripperMove(ry.ArgWord._left, 0.)
+            # bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
+            # # Run reference path
+            # times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+            # bot.move(path, times)
+            # bot.wait(cfg, forKeyPressed=True, forTimeToEnd=False)
+
+            # #get robot joint positions
+            # joint_positions = bot.get_q()
+            # print("Final joint positions on BotOp:")
+            # for i, joint_pos in enumerate(joint_positions):
+            #     print(f"Joint {i + 1}: {joint_pos:.4f} radians")
 
             cameras = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
             import threading
@@ -283,7 +339,7 @@ def main(args):
                                 ball_cam_coords = np.array([x, y, cam_depth, 1]).reshape(4,1)
                                 ball_world_coords = R.T @ ball_cam_coords[:3] + t
                                 x_w, y_w, z_w = ball_world_coords.flatten()
-                                print(f"Ball Camera Coordinates: X:{x:.2f}m Y:{y:.2f}m Z:{cam_depth:.2f}m")
+                                print(f"Ball Camera CoordinatSimWraes: X:{x:.2f}m Y:{y:.2f}m Z:{cam_depth:.2f}m")
                                 print(f"Ball World Coordinates: X:{x_w:.2f}m Y:{y_w:.2f}m Z:{z_w:.2f}m")
                         
 
