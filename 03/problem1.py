@@ -4,31 +4,21 @@ import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 import cv2 as cv
-
-##################
+ from stl import mesh
 from typing import Union
+
 BALL_DIAMETER = 0.063  # meters
 
-def gen_scene_ball():
-    cfg = ry.Config()
-    cfg.addFile(ry.raiPath("scenarios/pandaSingle.g"))
-    cfg.delFrame("panda_collCameraWrist")
-    cfg.addFile("assets/cfg0.g")
-
-    # Load STL file
-    from stl import mesh
-    your_mesh = mesh.Mesh.from_file("/home/aldo/Documents/Gravity_panda/gravity-panda/03/assets/Gravity_Panda_Project_Cup.stl")
+def add_cup_to_scene(cfg):
+    cup_mesh = mesh.Mesh.from_file("../assets/gp_cup.stl")
+    cup_mesh.vectors = cup_mesh.vectors * 0.001 # Scale mesh from mm to m
     
-
-    scale_factor = 0.001  # Scale from mm to m
-    your_mesh.vectors *= scale_factor
     # Get vertices and triangles
-    vertices = your_mesh.vectors.reshape(-1, 3)  # Shape: (n*3, 3)
+    vertices = cup_mesh.vectors.reshape(-1, 3)  # Shape: (n*3, 3)
     triangles = np.arange(len(vertices)).reshape(-1, 3)  # Shape: (n, 3)
 
-    # Add cup as STL mesh object
+    # Add cup to scene
     cup = cfg.addFrame("cup")
-    # cup.setShape(ry.ST.marker, 0.02)
     cup.setMesh(vertices, triangles)
     cup.setParent(cfg.getFrame("l_gripper"))
     cup.setJoint(ry.JT.rigid)
@@ -63,6 +53,14 @@ def gen_scene_ball():
     print(f"Finger 1 joint type: {finger1.getJointType()}")
     q = cfg.getJointState()
     print("Initial joint positions:", q)
+
+def gen_scene_ball():
+    cfg = ry.Config()
+    cfg.addFile(ry.raiPath("scenarios/pandaSingle.g"))
+    cfg.delFrame("panda_collCameraWrist")
+    cfg.addFile("assets/cfg0.g")
+
+    
     return cfg
 
 
@@ -96,7 +94,7 @@ class SimWrapper:
     def reset(self):
         self.sim.resetTime(0.)
         self.sim.resetSplineRef()
-        self.sim.setState(*self.q_home)
+        self.sim.setState(self.q_home)
 
     def step(self, u: Union[np.ndarray, list], mode: ry.ControlMode) -> None:
         self.sim.step(u, self.sim_tau, mode)
@@ -120,9 +118,6 @@ class SimWrapper:
                 determines the coarseness of the simulation.
         """
         path = np.atleast_2d(path)
-
-        # 1.: Simulated trajectory rollout
-        # This code snippet should complete the rollout of a trajectory in simulation
 
         #### BEGIN SOLUTION
         path_len = len(path)

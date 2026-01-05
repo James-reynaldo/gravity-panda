@@ -1,64 +1,73 @@
-** compiled at:     Oct 12 2025 11:05:56
-** execution start: 2025-12-21 22:49:42:533462
-graph.cpp:initParameters:1589(3) opening config file 'rai.cfg'
-graph.cpp:initParameters:1596(3)  - failed
-graph.cpp:initParameters:1602(3) opening base config file '/root/local/rai/../rai-robotModels/../local.cfg'
-graph.cpp:initParameters:1608(3)  - failed
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios' from '/home/aldo/Documents/AI&Robotics_together_rep/robotics-lab-student-ws-25/03'
+** compiled at:     Dec  8 2025 11:41:14
+** execution start: 2026-01-04 15:38:44:759209
+graph.cpp:initParameters:1799(3) opening config file 'rai.cfg'
+graph.cpp:initParameters:1806(3)  - failed
+graph.cpp:initParameters:1812(3) opening base config file '/root/local/rai/../rai-robotModels/../local.cfg'
+graph.cpp:initParameters:1818(3)  - failed
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios' from '/home/phil/uni_ws/gravity-panda/03'
 util.cpp:getIs:1104(3) opening input file 'pandaSingle.g'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'panda_fixGripper.g'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios/../panda' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios/../panda' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'panda.g'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda'
 util.cpp:getIs:1104(3) opening input file 'panda_arm_hand_conv.yml'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link0.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link1.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link2.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link3.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link4.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link5.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link6.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'link7.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'hand.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/panda/meshes' from '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
 util.cpp:getIs:1104(3) opening input file 'finger.h5'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/ry_kernel_env2/lib/python3.8/site-packages/robotic/rai-robotModels/scenarios'
-util.cpp:cd_base:1068(3) entering path '/home/aldo/Documents/AI&Robotics_together_rep/robotics-lab-student-ws-25/03'
-util.cpp:cd_file:1077(3) entering path '/home/aldo/Documents/AI&Robotics_together_rep/robotics-lab-student-ws-25/03/assets' from '/home/aldo/Documents/AI&Robotics_together_rep/robotics-lab-student-ws-25/03'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03/.venv/lib/python3.10/site-packages/robotic/rai-robotModels/scenarios'
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03'
+util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/03/assets' from '/home/phil/uni_ws/gravity-panda/03'
 util.cpp:getIs:1104(3) opening input file 'cfg0.g'
-graph.cpp:getParents:845(-1) parsing parent 'world' -- unknown
-util.cpp:cd_base:1068(3) entering path '/home/aldo/Documents/AI&Robotics_together_rep/robotics-lab-student-ws-25/03'
-kin_physx.cpp:PhysXInterface:1032(0) starting PhysX engine ...
-kin_physx.cpp:addGround:277(0) ... done starting PhysX engine
-kin_physx.cpp:addGround:278(0) creating Configuration within PhysX ...
-kin_physx.cpp:prepareLinkShapes:722(0) link 'world' has no mass -> becomes static
-kin_physx.cpp:addLink:296(0) adding link 'world' as static with 1 shapes ( table)
-kin_physx.cpp:addMultiBody:488(0) adding multibody with base 'l_panda_base' fixedBase: 1 gravity: 0
-kin_physx.cpp:addMultiBody:684(0) ... done with multibody with base 'l_panda_base'
-kin_physx.cpp:prepareLinkShapes:722(0) link 'cameraTopMiddle' has no mass -> becomes static
-kin_physx.cpp:addLink:296(0) adding link 'ball' as dynamic with 1 shapes ( ball) and mass 0.1
-kin_physx.cpp:PhysXInterface:1058(0) list of free frames: [l_panda_base, cameraTopMiddle, ball]
-kin_physx.cpp:PhysXInterface:1059(0) list of articulation joints: [l_panda_joint1, l_panda_joint2, l_panda_joint3, l_panda_joint4, l_panda_joint5, l_panda_joint6, l_panda_joint7, l_panda_finger_joint1, l_panda_finger_joint2]
-kin_physx.cpp:PhysXInterface:1060(0) ... done creating Configuration within PhysX
+graph.cpp:getParents:878(-1) parsing parent 'world' -- unknown
+util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda/03'
+i_Physx.cpp:PhysXInterface:1039(0) starting PhysX engine ...
+i_Physx.cpp:addGround:284(0) ... done starting PhysX engine
+i_Physx.cpp:addGround:285(0) creating Configuration within PhysX ...
+i_Physx.cpp:prepareLinkShapes:733(0) link 'world' has no mass -> becomes static
+i_Physx.cpp:addLink:303(0) adding link 'world' as static with 1 shapes ( table)
+i_Physx.cpp:addMultiBody:497(0) adding multibody with base 'l_panda_base' fixedBase: 1 gravity: 0
+i_Physx.cpp:addMultiBody:695(0) ... done with multibody with base 'l_panda_base'
+i_Physx.cpp:prepareLinkShapes:733(0) link 'cameraTopMiddle' has no mass -> becomes static
+i_Physx.cpp:addLink:303(0) adding link 'ball' as dynamic with 1 shapes ( ball) and mass 0.1
+i_Physx.cpp:addLink:303(0) adding link 'cup' as dynamic with 1 shapes ( cup) and mass 0.277402
+i_Physx.cpp:prepareLinkShapes:733(0) link 'target_pos' has no mass -> becomes static
+i_Physx.cpp:PhysXInterface:1065(0) list of free frames: [l_panda_base, cameraTopMiddle, ball, cup, target_pos]
+i_Physx.cpp:PhysXInterface:1066(0) list of articulation joints: [l_panda_joint1, l_panda_joint2, l_panda_joint3, l_panda_joint4, l_panda_joint5, l_panda_joint6, l_panda_joint7, l_panda_finger_joint1, l_panda_finger_joint2]
+i_Physx.cpp:PhysXInterface:1067(0) ... done creating Configuration within PhysX
+simulation.cpp:moveGripper:397(1) initiating moving gripper l_panda_joint7 (without releasing obj) width:0 speed:0.3
+simulation.cpp:~Simulation:161(0) shutting down Simulation
+** execution stop: 2026-01-04 15:39:03:322214
+** real time: 18.5631sec
+** CPU time: 26.2625
+
+** set+queried params:
