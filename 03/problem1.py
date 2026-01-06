@@ -4,7 +4,7 @@ import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 import cv2 as cv
- from stl import mesh
+from stl import mesh
 from typing import Union
 
 BALL_DIAMETER = 0.063  # meters
@@ -12,7 +12,7 @@ BALL_DIAMETER = 0.063  # meters
 def add_cup_to_scene(cfg):
     cup_mesh = mesh.Mesh.from_file("../assets/gp_cup.stl")
     cup_mesh.vectors = cup_mesh.vectors * 0.001 # Scale mesh from mm to m
-    
+
     # Get vertices and triangles
     vertices = cup_mesh.vectors.reshape(-1, 3)  # Shape: (n*3, 3)
     triangles = np.arange(len(vertices)).reshape(-1, 3)  # Shape: (n, 3)
@@ -53,13 +53,14 @@ def add_cup_to_scene(cfg):
     print(f"Finger 1 joint type: {finger1.getJointType()}")
     q = cfg.getJointState()
     print("Initial joint positions:", q)
+    return cfg
 
 def gen_scene_ball():
     cfg = ry.Config()
     cfg.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     cfg.delFrame("panda_collCameraWrist")
     cfg.addFile("assets/cfg0.g")
-
+    cfg = add_cup_to_scene(cfg)
     
     return cfg
 

@@ -1,5 +1,5 @@
 ** compiled at:     Dec  8 2025 11:41:14
-** execution start: 2026-01-04 15:38:44:759209
+** execution start: 2026-01-05 16:30:28:378465
 graph.cpp:initParameters:1799(3) opening config file 'rai.cfg'
 graph.cpp:initParameters:1806(3)  - failed
 graph.cpp:initParameters:1812(3) opening base config file '/root/local/rai/../rai-robotModels/../local.cfg'
@@ -66,8 +66,8 @@ i_Physx.cpp:PhysXInterface:1066(0) list of articulation joints: [l_panda_joint1,
 i_Physx.cpp:PhysXInterface:1067(0) ... done creating Configuration within PhysX
 simulation.cpp:moveGripper:397(1) initiating moving gripper l_panda_joint7 (without releasing obj) width:0 speed:0.3
 simulation.cpp:~Simulation:161(0) shutting down Simulation
-** execution stop: 2026-01-04 15:39:03:322214
-** real time: 18.5631sec
-** CPU time: 26.2625
+** execution stop: 2026-01-05 16:30:49:462689
+** real time: 21.0843sec
+** CPU time: 19.8739
 
 ** set+queried params:
