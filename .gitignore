@@ -1,0 +1,4 @@
+*.lock
+*.global
+*.log
+**/.venv
