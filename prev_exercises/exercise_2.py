@@ -18,7 +18,7 @@ def gen_scene() -> ry.Config:
 
     C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     # Adding a camera and markers
-    C.addFile("./config/config_markers_2.g")
+    C.addFile("../config/config_markers_2.g")
     
     box1_pos_init = [-0.25, 0.1, 0.675]
     box2_pos_init = [0.25, 0.1, 0.675]
