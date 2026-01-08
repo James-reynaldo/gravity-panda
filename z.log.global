@@ -1,5 +1,5 @@
 ** compiled at:     Dec  8 2025 11:41:14
-** execution start: 2026-01-08 12:19:33:318485
+** execution start: 2026-01-08 12:30:12:114655
 graph.cpp:initParameters:1799(3) opening config file 'rai.cfg'
 graph.cpp:initParameters:1806(3)  - failed
 graph.cpp:initParameters:1812(3) opening base config file '/root/local/rai/../rai-robotModels/../local.cfg'
@@ -50,26 +50,8 @@ util.cpp:cd_file:1077(3) entering path '/home/phil/uni_ws/gravity-panda/config' 
 util.cpp:getIs:1104(3) opening input file 'config_gp.g'
 graph.cpp:getParents:878(-1) parsing parent 'world' -- unknown
 util.cpp:cd_base:1068(3) entering path '/home/phil/uni_ws/gravity-panda'
-i_Physx.cpp:PhysXInterface:1039(0) starting PhysX engine ...
-i_Physx.cpp:addGround:284(0) ... done starting PhysX engine
-i_Physx.cpp:addGround:285(0) creating Configuration within PhysX ...
-i_Physx.cpp:prepareLinkShapes:733(0) link 'world' has no mass -> becomes static
-i_Physx.cpp:addLink:303(0) adding link 'world' as static with 1 shapes ( table)
-i_Physx.cpp:addMultiBody:497(0) adding multibody with base 'l_panda_base' fixedBase: 1 gravity: 0
-i_Physx.cpp:addMultiBody:695(0) ... done with multibody with base 'l_panda_base'
-i_Physx.cpp:prepareLinkShapes:733(0) link 'cameraTopMiddle' has no mass -> becomes static
-i_Physx.cpp:addLink:303(0) adding link 'ball' as dynamic with 1 shapes ( ball) and mass 0.1
-i_Physx.cpp:prepareLinkShapes:733(0) link 'q_home' has no mass -> becomes static
-i_Physx.cpp:prepareLinkShapes:733(0) link 'target' has no mass -> becomes static
-i_Physx.cpp:prepareLinkShapes:733(0) link 'world_frame' has no mass -> becomes static
-i_Physx.cpp:PhysXInterface:1065(0) list of free frames: [l_panda_base, cameraTopMiddle, ball, q_home, target, world_frame]
-i_Physx.cpp:PhysXInterface:1066(0) list of articulation joints: [l_panda_joint1, l_panda_joint2, l_panda_joint3, l_panda_joint4, l_panda_joint5, l_panda_joint6, l_panda_joint7, l_panda_finger_joint1, l_panda_finger_joint2]
-i_Physx.cpp:PhysXInterface:1067(0) ... done creating Configuration within PhysX
 bot.cpp:~BotOp:139(0) shutting down BotOp...
 simulation.cpp:~BotThreadedSim:61(0) shutting down SimThread
-simulation.cpp:~Simulation:161(0) shutting down Simulation
-** execution stop: 2026-01-08 12:19:45:460995
-** real time: 12.1426sec
-** CPU time: 17.7918
-
-** set+queried params:
+bot.cpp:getTimeToEnd:175(-1) can't get timeToEnd for non-spline mode
+bot.cpp:~BotOp:139(0) shutting down BotOp...
+simulation.cpp:~BotThreadedSim:61(0) shutting down SimThread

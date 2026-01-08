@@ -67,18 +67,34 @@ def main(args):
         # Display camera image or ball detection
         pass
 
-    if args.sim_only:
-        komo = planner.setup_komo(C)
-        path = planner.get_path_from_komo(komo)
-        if path is None:
-            return
+    # Setup everything for path planning and execution
+    q_home = C.getJointState()
+    n_phases = 1
+    komo = planner.setup_komo(C, n_phases)
+    path = planner.get_path_from_komo(komo)
+    if path is None:
+        return
+
+    if not args.botop or args.sim_only:
         # path = np.load("motion/ball_shot.npy")
         sim = SimWrapper(C, display_delay=0.1)
         # sim.close_gripper()
-        sim.run_trajectory(path, n_phases=1)
+        sim.run_trajectory(path, n_phases)
         for _ in range(50):
             sim.step([], ry.ControlMode.none)  # step sim to observe
+        sim.reset()
 
+    else:
+        bot = ry.BotOp(C, useRealRobot=args.real)
+        bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+        bot.moveTo(q_home)
+        # Close gripper
+        bot.gripperMove(ry.ArgWord._left, 0.)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # Run reference path
+        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+        bot.move(path, times)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
