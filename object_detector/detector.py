@@ -2,8 +2,6 @@ import sys
 import cv2 as cv
 import numpy as np
 
-
-
 def detector_loop():
     """
     Docstring for detector_loop
