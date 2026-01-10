@@ -18,7 +18,12 @@ def gen_scene():
     C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     C.delFrame("panda_collCameraWrist")
     C.addFile("config/config_gp.g")
-    
+    #  attach a cylinder to the robot left finger
+    C.addFrame("cup", "l_finger1")
+    cup = C.getFrame("cup")
+    cup.setShape(ry.ST.cylinder, [0.04, 0.04])
+    cup.setColor([0.8, 0.3, 0.3])
+    cup.setRelativePosition([0.05, -0.02, 0])
     return C
 
 def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
