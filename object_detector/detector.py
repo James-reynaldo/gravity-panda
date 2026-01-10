@@ -1,6 +1,8 @@
 import sys
 import cv2 as cv
 import numpy as np
+import robotic as ry
+import matplotlib.pyplot as plt
 
 def detector_loop():
     """
@@ -10,6 +12,63 @@ def detector_loop():
 
     while not stop_detect:
         pass
+
+def process_frame(rgb, depth, K, camera_rot, camera_coor):
+    """
+    Process a single frame for ball detection
+    
+    Returns:
+        Tuple of (best_ball_world_coor, best_circle, mask_blur)
+    """
+    mask_blur = filter_image_by_color(rgb)
+    circles = circl_hough_transform(mask_blur)
+    
+    best_ball_world_coor = None
+    best_circle = None
+    
+    if circles is not None and len(circles[0]) > 0:
+        circles_array = circles[0]
+        max_radius_idx = np.argmax(circles_array[:, 2])
+        best_circle = np.uint16(np.around(circles_array[max_radius_idx]))
+        
+        best_ball_world_coor = get_world_from_camera(
+            circle=best_circle, depth=depth, K=K,
+            camera_rot=camera_rot, camera_coor=camera_coor
+        )
+ 
+    return best_ball_world_coor, best_circle, mask_blur
+
+# Level 3: Simple detection stream
+def detect_stream(image_generator, K, camera_rot, camera_coor, display=False):
+    """Simple detection - yields (world_coor, circle)"""
+    for frame_id, rgb, depth in image_generator:
+        world_coor, circle, mask_blur = process_frame(rgb, depth, K, camera_rot, camera_coor)
+
+        # Display logic if requested
+        if display:
+            display_circles = None
+            if circle is not None:
+                display_circles = np.array([[circle]])  # Shape [1, 1, 3]
+            
+            rgb_display = draw_detected_circles(rgb, display_circles)
+            
+            fig, axs = plt.subplots(1, 3, figsize=(10, 5))
+            axs[0].imshow(rgb, cmap='gray')
+            axs[0].set_title("Original")
+            axs[0].axis('off')
+            
+            axs[1].imshow(mask_blur, cmap='gray')
+            axs[1].set_title("Color Mask")
+            axs[1].axis('off')
+            
+            axs[2].imshow(rgb_display)
+            axs[2].set_title("Detected Circle(s)")
+            axs[2].axis('off')
+            
+            plt.tight_layout()
+            plt.show()
+        
+        yield world_coor, circle
 
 def filter_image_by_color(rgb, color_lower: np.ndarray = np.array([90, 50, 50]), 
                           color_upper: np.ndarray = np.array([130, 255, 255]), 

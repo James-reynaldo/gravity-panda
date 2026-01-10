@@ -34,73 +34,30 @@ def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
         print("Continuing...")
         return True
     
-def detect_and_display(bot:ry.BotOp, camera_name, K, camera_rot, camera_coor, display=False):
+def camera_stream(bot: ry.BotOp, camera_name, max_frames=None, single_frame=False):
     """
-    Unified function for detection with optional display
+    Generator that yields camera frames with optional limit
     
     Args:
-        display: If True, show visualization and return
-    Returns:
-        best_ball_world_coor: World coordinates of best ball or None
-        best_circle: Pixel coordinates (x, y, radius) of best circle or None
+        bot: BotOp instance
+        camera_name: Name of the camera to use
+        max_frames: Optional maximum number of frames to yield
+    Yields:
+        Tuple of (frame_id, rgb, depth)
     """
-    # Capture and process
-    rgb, depth, _ = bot.getImageDepthPcl(camera_name)
-    mask_blur = det.filter_image_by_color(rgb)
-    circles = det.circl_hough_transform(mask_blur)
-    
-    best_ball_world_coor = None
-    best_circle = None
-    
-    # Process detection results
-    if circles is not None and len(circles[0]) > 0:
-        # Select best circle (largest radius)
-        circles_array = circles[0]  # Shape: [n, 3]
-        max_radius_idx = np.argmax(circles_array[:, 2])
-        best_circle = np.uint16(np.around(circles_array[max_radius_idx]))
-        
-        # Get world coordinates
-        best_ball_world_coor = det.get_world_from_camera(
-            circle=best_circle, depth=depth, K=K,
-            camera_rot=camera_rot, camera_coor=camera_coor
-        )
-        
-        if best_ball_world_coor is not None:
-            print(f"Best ball at world coordinates: {best_ball_world_coor} (radius: {best_circle[2]}px)")
+    if single_frame:
+        rgb, depth, _ = bot.getImageDepthPcl(camera_name)
+        yield 0, rgb, depth
+        return
     else:
-        if not display:  # Only print in non-display mode
-            print("No circles detected")
-    
-    # Display if requested
-    if display:
-        # For display: create array with just the best circle (or all circles)
-        display_circles = None
-        if best_circle is not None:
-            display_circles = np.array([[best_circle]])  # Shape [1, 1, 3]
-        elif circles is not None:
-            display_circles = circles
-        
-        rgb_display = det.draw_detected_circles(rgb, display_circles)
-        
-        fig, axs = plt.subplots(1, 3, figsize=(10, 5))
-        axs[0].imshow(rgb, cmap='gray')
-        axs[0].set_title("Original")
-        axs[0].axis('off')
-        
-        axs[1].imshow(mask_blur, cmap='gray')
-        axs[1].set_title("Color Mask")
-        axs[1].axis('off')
-        
-        axs[2].imshow(rgb_display)
-        axs[2].set_title("Detected Circle(s)")
-        axs[2].axis('off')
-        
-        plt.tight_layout()
-        plt.show()
-        return best_ball_world_coor, best_circle
-    
-    # Return results for non-display mode
-    return best_ball_world_coor, best_circle
+        frame_id = 0
+        while True:
+            if max_frames is not None and frame_id >= max_frames:
+                break
+                
+            rgb, depth, _ = bot.getImageDepthPcl(camera_name)
+            yield frame_id, rgb, depth
+            frame_id += 1
 
 
 def main(args):
@@ -133,37 +90,25 @@ def main(args):
         print("Camera position: ", camera_coor)
         print("Camera rotation: \n", camera_rot)
 
-        if args.display:   
+        if args.display: #display only one frame
             # inside detection loop
-            detect_and_display(
-                bot=bot,
-                camera_name=camera_pos[args.input],
-                K=K,
-                camera_rot=camera_rot,
-                camera_coor=camera_coor,
-                display=True
-            )
+            stream = camera_stream(bot, camera_pos[args.input], single_frame=True)
+            for result in det.detect_stream(stream, K, camera_rot, camera_coor, display=True):
+                world_coor, _ = result
+                if world_coor is not None:
+                    pass
+                else:
+                    print("No ball detected in the frame.")
             return  
         else:
-            while True: # This should be the detection loop
-                best_ball, best_circle = detect_and_display(
-                    bot=bot,
-                    camera_name=camera_pos[args.input],
-                    det=det,
-                    K=K,
-                    camera_rot=camera_rot,
-                    camera_coor=camera_coor,
-                    display=False
-                )
-                
-                if best_ball is not None:
-                    # Use for motion planning
-                    #plan_to_target(best_ball)
+            stream = camera_stream(bot, camera_pos[args.input])
+            for result in det.detect_stream(stream, K, camera_rot, camera_coor, display=False):
+                world_coor, _ = result
+                if world_coor is not None:
+                    # Do something with the detection
                     pass
-                
-                time.sleep(0.033)  # ~30 Hz
-        
-
+                else:
+                    print("No ball detected in the frame.")
 
     elif args.input == "standalone":
         camera = RealSense()
@@ -173,6 +118,7 @@ def main(args):
     else:
         rgb, depth = None, None
 
+    bot.sync
     
 
     # Setup everything for path planning and execution
