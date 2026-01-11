@@ -4,3 +4,4 @@
 **/.venv
 
 **/z.log.global
+**/uv.lock
