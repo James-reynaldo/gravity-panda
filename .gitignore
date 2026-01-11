@@ -2,3 +2,5 @@
 *.global
 *.log
 **/.venv
+
+**/z.log.global
