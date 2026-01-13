@@ -4,22 +4,23 @@ import numpy as np
 from typing import List
 import time
 
-def setup_komo(C: ry.Config, n_phases):
+def setup_komo(C: ry.Config, n_phases, ball_position):
 # Compute push parameters
     table = C.getFrame("table")
     table_height = table.getSize()[2] * .5
-    ball_position = C.getFrame("ball").getPosition()
-    target_height = table_height + 0.7                                                  # 0.8 is more safe
-    target_position = np.array([ball_position[0], ball_position[1], target_height])
+    cup = C.getFrame("cup")
+    tol_gripper = 0.02
+    cup_size = cup.getSize()[0] + tol_gripper
 
-    # Chose gripper
-    gripper = "l_gripper"
+    target_height = table_height + 0.7                                                  # 0.8 is more safe
+    target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
+
+    # Chose end_effector
+    end_effector = "l_gripper"
+    # end_effector = "cup"
 
     C.addFrame('target'). setShape(ry.ST.marker, [.1]) .setPosition(target_position)
     C.addFrame('world_frame').setShape(ry.ST.marker, [.1]).setPosition(C.getFrame('world').getPosition())
-
-    # Disable necessary contact in optimization
-    C.getFrame("ball").setContact(0)
 
     # Setup komo
     komo = ry.KOMO()
@@ -32,12 +33,12 @@ def setup_komo(C: ry.Config, n_phases):
     komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq, [1e1])                     # Do not exceed robots joint limits
     komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)                    # Do not self collide
 
-    # Constraints on gripper orientation
-    komo.addObjective([1], ry.FS.scalarProductZZ, ['world', gripper], ry.OT.eq, [1e1], [0])
-    komo.addObjective([1], ry.FS.scalarProductYZ, ['world', gripper], ry.OT.eq, [1e1], [0])
-    komo.addObjective([1], ry.FS.scalarProductXZ, [gripper, 'world'], ry.OT.eq, [1e1], [0])
+    # Constraints on end_effector orientation
+    komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
+    komo.addObjective([1], ry.FS.scalarProductYZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
+    komo.addObjective([1], ry.FS.scalarProductXZ, [end_effector, 'world'], ry.OT.eq, [1e1], [0])
 
-    komo.addObjective([1], ry.FS.positionDiff, [gripper,'target'], ry.OT.eq, [1e1])     # try to reach target immediately
+    komo.addObjective([1], ry.FS.positionDiff, [end_effector,'target'], ry.OT.eq, [1e1])     # try to reach target immediately
 
     return komo
 

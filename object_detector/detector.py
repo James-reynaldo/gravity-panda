@@ -1,17 +1,34 @@
 import sys
+import time
+import threading
 import cv2 as cv
 import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 
-def detector_loop():
-    """
-    Docstring for detector_loop
-    """
-    stop_detect = False
 
-    while not stop_detect:
-        pass
+class Camera():
+    def __init__(self, bot) -> None:
+        self.bot = bot
+        
+        self.camera_thread = None
+
+    def start(self):
+        self.camera_thread = threading.Thread(target=self.detector_loop, args=[], daemon=True)
+        self.camera_thread.start()
+
+    def shutdown(self):
+        if self.camera_thread:
+            self.camera_thread.join(timeout=1.0)
+
+    def detector_loop(self):
+        """
+        Docstring for detector_loop
+        """
+        stop_detect = False
+
+        while not stop_detect:
+            pass
 
 def process_frame(rgb, depth, K, camera_rot, camera_coor):
     """
@@ -137,6 +154,44 @@ def get_world_from_camera(circle: tuple, depth: np.ndarray,
     print("Ball world coordinates: ", ball_world_coor)
 
     return ball_world_coor
+
+
+def camera_stream(bot: ry.BotOp, camera_name, max_frames=None, single_frame=False):
+    """
+    Generator that yields camera frames with optional limit
+    
+    Args:
+        bot: BotOp instance
+        camera_name: Name of the camera to use
+        max_frames: Optional maximum number of frames to yield
+    Yields:
+        Tuple of (frame_id, rgb, depth)
+    """
+    if single_frame:
+        rgb, depth, _ = bot.getImageDepthPcl(camera_name)
+        yield 0, rgb, depth
+        return
+    else:
+        frame_id = 0
+        while True:
+            if max_frames is not None and frame_id >= max_frames:
+                break
+                
+            rgb, depth, _ = bot.getImageDepthPcl(camera_name)
+            yield frame_id, rgb, depth
+            frame_id += 1
+
+
+def do_camera(args, bot, camera_pos, K, camera_rot, camera_coor, ball_position):
+        stream = camera_stream(bot, camera_pos[args.input], single_frame=True)
+        for result in detect_stream(stream, K, camera_rot, camera_coor, display=args.display):
+            ball_position, _ = result
+            if ball_position is None:
+                print("No ball detected in the frame.")
+                time.sleep(0.1)
+        
+        # if args.display:
+        #     exit(0)
 
 
 def main(argv):

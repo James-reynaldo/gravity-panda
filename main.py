@@ -1,4 +1,5 @@
 import time
+import threading
 import argparse
 import numpy as np
 import robotic as ry
@@ -7,9 +8,10 @@ from typing import Union, List, Any
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
-from object_detector import detector as det
+from object_detector.detector import do_camera
 from simulation.sim_wrapper import SimWrapper
 from motion import komo_planner as planner
+
 
 
 def gen_scene():
@@ -21,9 +23,11 @@ def gen_scene():
     #  attach a cylinder to the robot left finger
     C.addFrame("cup", "l_finger1")
     cup = C.getFrame("cup")
-    cup.setShape(ry.ST.cylinder, [0.04, 0.04])
+    cup.setShape(ry.ST.cylinder, [0.06, 0.06])
     cup.setColor([0.8, 0.3, 0.3])
-    cup.setRelativePosition([0.05, -0.02, 0])
+    cup.setRelativePosition([-0.035, -0.035, 0.065]) 
+    cup.setQuaternion([0.7071, 0.0, -0.7071, 0.0])
+
     return C
 
 def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
@@ -38,31 +42,7 @@ def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
     else:
         print("Continuing...")
         return True
-    
-def camera_stream(bot: ry.BotOp, camera_name, max_frames=None, single_frame=False):
-    """
-    Generator that yields camera frames with optional limit
-    
-    Args:
-        bot: BotOp instance
-        camera_name: Name of the camera to use
-        max_frames: Optional maximum number of frames to yield
-    Yields:
-        Tuple of (frame_id, rgb, depth)
-    """
-    if single_frame:
-        rgb, depth, _ = bot.getImageDepthPcl(camera_name)
-        yield 0, rgb, depth
-        return
-    else:
-        frame_id = 0
-        while True:
-            if max_frames is not None and frame_id >= max_frames:
-                break
-                
-            rgb, depth, _ = bot.getImageDepthPcl(camera_name)
-            yield frame_id, rgb, depth
-            frame_id += 1
+
 
 
 def main(args):
@@ -83,6 +63,7 @@ def main(args):
         exit(0)
 
     camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
+    ball_position = None
     if args.input in camera_pos:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
         fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
@@ -92,28 +73,13 @@ def main(args):
                     [0,  0,  1.0]]) 
         camera_coor = C.getFrame(camera_pos[args.input]).getPosition()
         camera_rot = C.getFrame(camera_pos[args.input]).getRotationMatrix()
-        print("Camera position: ", camera_coor)
-        print("Camera rotation: \n", camera_rot)
+        # print("Camera position: ", camera_coor)
+        # print("Camera rotation: \n", camera_rot)
 
-        if args.display: #display only one frame
-            # inside detection loop
-            stream = camera_stream(bot, camera_pos[args.input], single_frame=True)
-            for result in det.detect_stream(stream, K, camera_rot, camera_coor, display=True):
-                world_coor, _ = result
-                if world_coor is not None:
-                    pass
-                else:
-                    print("No ball detected in the frame.")
-            return  
-        else:
-            stream = camera_stream(bot, camera_pos[args.input])
-            for result in det.detect_stream(stream, K, camera_rot, camera_coor, display=False):
-                world_coor, _ = result
-                if world_coor is not None:
-                    # Do something with the detection
-                    pass
-                else:
-                    print("No ball detected in the frame.")
+        
+
+        thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
+        thread_camera.start()
 
     elif args.input == "standalone":
         camera = RealSense()
@@ -122,14 +88,13 @@ def main(args):
         rgb, depth = camera.acquire_rgb_and_depth()
     else:
         rgb, depth = None, None
-
-    bot.sync
     
 
     # Setup everything for path planning and execution
     q_home = C.getJointState()
     n_phases = 1
-    komo = planner.setup_komo(C, n_phases)
+    ball_position = ball_position if ball_position is not None else [-0.6, 0.2, 2]
+    komo = planner.setup_komo(C, n_phases, ball_position)
     path = planner.get_path_from_komo(komo)
     if path is None:
         return
@@ -152,8 +117,21 @@ def main(args):
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
         # Run reference path
         times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+
+        # C.addFrame("ball", "world")
+        # ball = C.getFrame("cup")
+        # ball.setShape(ry.ST.sphere, [0.0315])
+        # ball.setColor([0, 1, 1])
+        # ball.setRelativePosition([-0.6, 0.2, 2])
+        # ball.setContact(0)
+        # ball.setMass(0.01) 
+       
+        # bot.sync(C)
+
         bot.move(path, times)
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+
+    thread_camera.join(timeout=0.5)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
