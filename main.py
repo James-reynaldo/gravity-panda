@@ -20,15 +20,33 @@ def gen_scene():
     C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     C.delFrame("panda_collCameraWrist")
     C.addFile("config/config_gp.g")
-    #  attach a cylinder to the robot left finger
+
+    # Attach cup as basic cylinder to robot gripper
     C.addFrame("cup", "l_finger1")
+    finger = C.getFrame("l_finger1")
+    finger_orientation = finger.getQuaternion()
     cup = C.getFrame("cup")
     cup.setShape(ry.ST.cylinder, [0.06, 0.06])
     cup.setColor([0.8, 0.3, 0.3])
-    cup.setRelativePosition([-0.035, -0.035, 0.065]) 
-    cup.setQuaternion([0.7071, 0.0, -0.7071, 0.0])
+    
+    rot_90_deg_rx = np.array([0.7071, 0.0, -0.7071, 0.0])
+
+    w1, x1, y1, z1 = finger_orientation
+    w2, x2, y2, z2 = rot_90_deg_rx
+
+    q_final = np.array([
+        w1*w2 - x1*x2 - y1*y2 - z1*z2,
+        w1*x2 + x1*w2 + y1*z2 - z1*y2,
+        w1*y2 - x1*z2 + y1*w2 + z1*x2,
+        w1*z2 + x1*y2 - y1*x2 + z1*w2
+    ])
+
+    # Set cup pose
+    cup.setRelativePosition([-0.02, -0.035, 0.065]) 
+    cup.setQuaternion(q_final.tolist())
 
     return C
+
 
 def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
     user_key = C.view(pause=True, message="Press q to quit (any other key to continue)")
@@ -64,6 +82,7 @@ def main(args):
 
     camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
     ball_position = None
+    thread_camera = None
     if args.input in camera_pos:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
         fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
@@ -118,20 +137,12 @@ def main(args):
         # Run reference path
         times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
 
-        # C.addFrame("ball", "world")
-        # ball = C.getFrame("cup")
-        # ball.setShape(ry.ST.sphere, [0.0315])
-        # ball.setColor([0, 1, 1])
-        # ball.setRelativePosition([-0.6, 0.2, 2])
-        # ball.setContact(0)
-        # ball.setMass(0.01) 
-       
-        # bot.sync(C)
 
         bot.move(path, times)
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
-    thread_camera.join(timeout=0.5)
+    if thread_camera:
+        thread_camera.join(timeout=0.5)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
