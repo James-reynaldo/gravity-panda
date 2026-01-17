@@ -105,7 +105,7 @@ def main(args):
             bot=bot, 
             camera_pos= camera_pos, 
             display=True,
-            display_target="mask")
+            display_target="rgb")
         camera.start()
         try:
             if camera.display:
@@ -137,7 +137,7 @@ def main(args):
     # Setup everything for path planning and execution
     q_home = C.getJointState()
     n_phases = 1
-    ball_position = ball_position if ball_position is not None else [-0.6, 0.2, 2]
+    ball_position = camera.ball_position if camera.ball_position is not None else [-0.6, 0.2, 2]
     komo = planner.setup_komo(C, n_phases, ball_position)
     path = planner.get_path_from_komo(komo)
     if path is None:
