@@ -8,7 +8,7 @@ from typing import Union, List, Any
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
-from object_detector.detector import do_camera
+from object_detector.detector import Camera
 from simulation.sim_wrapper import SimWrapper
 from motion import komo_planner as planner
 
@@ -85,20 +85,45 @@ def main(args):
     thread_camera = None
     if args.input in camera_pos:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
-        fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
-        fx, fy, cx, cy = fxycxy
-        K = np.array([[fx, 0,  cx],
-                    [0,  fy, cy],
-                    [0,  0,  1.0]]) 
-        camera_coor = C.getFrame(camera_pos[args.input]).getPosition()
-        camera_rot = C.getFrame(camera_pos[args.input]).getRotationMatrix()
+        # fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
+        # fx, fy, cx, cy = fxycxy
+        # K = np.array([[fx, 0,  cx],
+        #             [0,  fy, cy],
+        #             [0,  0,  1.0]]) 
+        # camera_coor = C.getFrame(camera_pos[args.input]).getPosition()
+        # camera_rot = C.getFrame(camera_pos[args.input]).getRotationMatrix()
         # print("Camera position: ", camera_coor)
         # print("Camera rotation: \n", camera_rot)
 
         
 
-        thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
-        thread_camera.start()
+        # thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
+        # thread_camera.start()
+        camera = Camera(
+            C=C, 
+            input=args.input, 
+            bot=bot, 
+            camera_pos= camera_pos, 
+            display=True,
+            display_target="mask")
+        camera.start()
+        try:
+            if camera.display:
+                # Matplotlib will handle updates via animation
+                plt.show(block=True)  # This blocks until window is closed
+            else:
+                # If not displaying, just keep running
+                while True:
+                    time.sleep(0.1)
+                    
+        except KeyboardInterrupt:
+            print("\nInterrupted by user")
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            camera.shutdown()
+            print("Program exited cleanly.")
+
 
     elif args.input == "standalone":
         camera = RealSense()
