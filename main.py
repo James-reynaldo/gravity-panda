@@ -5,6 +5,7 @@ import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 from typing import Union, List, Any
+import traceback
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
@@ -82,7 +83,10 @@ def main(args):
 
     camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
     ball_position = None
-    thread_camera = None
+    last_ball_position = None
+    # Setup everything for path planning and execution
+    q_home = C.getJointState()
+    n_phases = 1
     if args.input in camera_pos:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
         # fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
@@ -95,7 +99,21 @@ def main(args):
         # print("Camera position: ", camera_coor)
         # print("Camera rotation: \n", camera_rot)
 
-        
+        home_position = [-0.2, 0.2, 2]
+        komo = planner.setup_komo(C, n_phases, home_position)
+        path = planner.get_path_from_komo(komo)
+
+        bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+        bot.moveTo(q_home)
+        # Close gripper
+        bot.gripperMove(ry.ArgWord._left, 0.)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # Run reference path
+        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+
+
+        bot.move(path, times)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
         # thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
         # thread_camera.start()
@@ -107,10 +125,35 @@ def main(args):
             display=True,
             display_target="rgb")
         camera.start()
+
+        
         try:
             if camera.display:
                 # Matplotlib will handle updates via animation
-                plt.show(block=True)  # This blocks until window is closed
+                plt.show(block=False)  # This blocks until window is closed
+                try:
+                    while camera.running:
+                        ball_position = camera.ball_position 
+                        if ball_position is not None:
+                            if (last_ball_position is None or 
+                                np.linalg.norm(np.array(ball_position) 
+                                               - np.array(last_ball_position)) > 0.02):
+
+                                    print(f"Ball moved to: {ball_position}")
+                                    last_ball_position = ball_position.copy()
+                                    komo = planner.setup_komo(C, n_phases, ball_position)
+                                    path = planner.get_path_from_komo(komo)
+                                    if path is not None:
+                                        # # Run reference path
+                                        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+                                        bot.move(path, times)
+                                    # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+                        else:
+                            print("NO BALL DETECTED...")
+                        plt.pause(0.1)  # Allow matplotlib to update
+                       
+                except KeyboardInterrupt:
+                    print("\nInterrupted by user")
             else:
                 # If not displaying, just keep running
                 while True:
@@ -119,7 +162,12 @@ def main(args):
         except KeyboardInterrupt:
             print("\nInterrupted by user")
         except Exception as e:
-            print(f"Error: {e}")
+            # Print the full traceback
+            traceback.print_exc()  # Prints to stderr
+            
+            # Or get traceback as string
+            error_msg = traceback.format_exc()
+            print(f"ERROR DETAILS:\n{error_msg}")
         finally:
             camera.shutdown()
             print("Program exited cleanly.")
@@ -135,11 +183,11 @@ def main(args):
     
 
     # Setup everything for path planning and execution
-    q_home = C.getJointState()
-    n_phases = 1
-    ball_position = camera.ball_position if camera.ball_position is not None else [-0.6, 0.2, 2]
-    komo = planner.setup_komo(C, n_phases, ball_position)
-    path = planner.get_path_from_komo(komo)
+    # q_home = C.getJointState()
+    # n_phases = 1
+    # ball_position = camera.ball_position if camera.ball_position is not None else [-0.6, 0.2, 2]
+    # komo = planner.setup_komo(C, n_phases, ball_position)
+    # path = planner.get_path_from_komo(komo)
     if path is None:
         return
 
@@ -153,21 +201,22 @@ def main(args):
         sim.reset()
 
     else:
-        bot = ry.BotOp(C, useRealRobot=args.real)
-        bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
-        bot.moveTo(q_home)
-        # Close gripper
-        bot.gripperMove(ry.ArgWord._left, 0.)
-        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
-        # Run reference path
-        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+        # bot = ry.BotOp(C, useRealRobot=args.real)
+        # bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+        # bot.moveTo(q_home)
+        # # Close gripper
+        # bot.gripperMove(ry.ArgWord._left, 0.)
+        # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # # Run reference path
+        # times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
 
 
-        bot.move(path, times)
-        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # bot.move(path, times)
+        # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        pass
 
-    if thread_camera:
-        thread_camera.join(timeout=0.5)
+    # if thread_camera:
+    #     thread_camera.join(timeout=0.5)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

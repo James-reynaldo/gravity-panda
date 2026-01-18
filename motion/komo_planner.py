@@ -42,7 +42,7 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
 
     return komo
 
-def get_path_from_komo(komo=None):
+def get_path_from_komo(komo:ry.KOMO=None, view= False):
     sol = ry.NLP_Solver()
     sol.setProblem(komo.nlp())
     sol.setOptions(damping=1e-1, verbose=0, stopTolerance=1e-2, stopInners=100, stopEvals=1000)
@@ -57,6 +57,7 @@ def get_path_from_komo(komo=None):
     path = komo.getPath()
 
     # Show planned path
-    komo.view_play(False, delay=.1)
+    if view:
+        komo.view_play(False, delay=.1)
     
     return path
