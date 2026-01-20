@@ -87,6 +87,7 @@ def main(args):
     # Setup everything for path planning and execution
     q_home = C.getJointState()
     n_phases = 1
+    
     if args.input in camera_pos:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
         # fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
@@ -125,7 +126,9 @@ def main(args):
             display=True,
             display_target="rgb")
         camera.start()
-
+        is_moving = False
+        plan_cooldown = 0.1  # seconds
+        last_plan_time = -np.inf
         
         try:
             if camera.display:
@@ -133,21 +136,46 @@ def main(args):
                 plt.show(block=False)  # This blocks until window is closed
                 try:
                     while camera.running:
+                        current_time = time.time()
                         ball_position = camera.ball_position 
+                        # Check motion status FIRST (outside ball check)
+                        time_to_end = bot.getTimeToEnd()
+                        if time_to_end > 0:
+                            is_moving = True
+                            print(f"Robot moving, TTE: {time_to_end:.2f}s")
+                        else:
+                            if is_moving:
+                                print("Motion completed")
+                            is_moving = False
                         if ball_position is not None:
-                            if (last_ball_position is None or 
+                            # Check if ball moved enough to replan
+                            should_replan = (
+                                not is_moving and  # Robot not moving
+                                (current_time - last_plan_time > plan_cooldown) and  # Cooldown passed
+                                (last_ball_position is None or  # First detection
                                 np.linalg.norm(np.array(ball_position) 
-                                               - np.array(last_ball_position)) > 0.02):
-
-                                    print(f"Ball moved to: {ball_position}")
-                                    last_ball_position = ball_position.copy()
-                                    komo = planner.setup_komo(C, n_phases, ball_position)
-                                    path = planner.get_path_from_komo(komo)
-                                    if path is not None:
-                                        # # Run reference path
-                                        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
-                                        bot.move(path, times)
-                                    # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+                                            - np.array(last_ball_position)) > 0.02)
+                            )
+                            if should_replan:
+                                print(f"Ball moved to: {ball_position}")
+                                # === CRITICAL FIX ===
+                                # Sync C with actual robot state
+                                bot.sync(C, waitTime=0.01)
+                                # Now C matches where robot ACTUALLY is!
+                                last_ball_position = ball_position.copy()
+                                last_plan_time = time.time()
+                                # Plan new path
+                                komo = planner.setup_komo(C, n_phases, ball_position)
+                                path = planner.get_path_from_komo(komo)
+                                if path is not None:
+                                    # # Run reference path
+                                    times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) #Fixes duration to only 1s
+                                    bot.move(path, times)
+                                    
+                                    # Update state
+                                    is_moving = True
+                                    TTE = bot.getTimeToEnd()
+                                    print(f"Started motion, TTE: {TTE:.2f}s")
                         else:
                             print("NO BALL DETECTED...")
                         plt.pause(0.1)  # Allow matplotlib to update
