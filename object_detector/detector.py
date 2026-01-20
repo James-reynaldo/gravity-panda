@@ -12,7 +12,7 @@ from matplotlib.animation import FuncAnimation
 
 
 class Camera():
-    def __init__(self, C:ry.Config= None ,input:str= None, bot: ry.BotOp= None, 
+    def __init__(self, C:ry.Config= None, input:str= None, bot: ry.BotOp= None, 
                  camera_pos:dict= None, display = False, max_frames:int= None, 
                  display_target = "rgb", kernel_size = (5, 5), min_area = 100) -> None:
         self.bot = bot
@@ -29,15 +29,12 @@ class Camera():
         self.ball_position = None
         self.K = None
         self.camera_coor = None
-        self.camera_rot = None
-        self.ball_position = None
-        self.camera_thread = None        
+        self.camera_rot = None     
 
         # Thread-safe queues for communication
         self.plot_queue = queue.Queue(maxsize=10)  # Limit queue size to prevent memory issues
         self.result_queue = queue.Queue()
         self.running = False
-
         
         # Matplotlib figure (created once in main thread)
         self.fig = None
@@ -93,7 +90,7 @@ class Camera():
             # Use matplotlib's animation for smooth updates
             self.anim = FuncAnimation(self.fig, self.update_plot, interval=50, blit=False, cache_frame_data=False)
 
-    def detector_loop(self, ball_position):
+    def detector_loop(self):
         try:
             stream = self.camera_stream()
             for result in self.detect_stream(stream):
@@ -137,8 +134,8 @@ class Camera():
             print(f"Error in detector loop: {e}")
         finally:
             print("Detector loop has stopped.")
-                # if args.display:
-                #     exit(0)
+            # if args.display:
+            #     exit(0)
     
     def update_plot(self, frame_num):
         """Called by matplotlib animation in main thread"""
@@ -251,7 +248,7 @@ class Camera():
                             color_upper: np.ndarray = np.array([130, 255, 170]), 
                             blur_parameter = 5) -> np.ndarray:
         """
-        Docstring for filter_image
+        Filter the image to isolate the ball based on color.
         """
         # Color Filtering + Blurring
         hsv = cv.cvtColor(rgb, cv.COLOR_RGB2HSV)
@@ -263,11 +260,11 @@ class Camera():
         mask_sep = cv.morphologyEx(mask_blur, cv.MORPH_OPEN, kernel)
         return mask_sep
 
-    def circl_hough_transform(self, mask: np.ndarray, dp: float = 1, minDist: float = 100,
+    def circle_hough_transform(self, mask: np.ndarray, dp: float = 1, minDist: float = 100,
                             param1: float = 100, param2: float = 15,
                             minRadius: int = 5, maxRadius: int = 100) -> np.ndarray:
         """
-        Docstring for circl_hough_transform
+        Use circle Hough transform to detect circles in the mask.
         """
         circles = cv.HoughCircles(mask, cv.HOUGH_GRADIENT, dp, minDist,
                                 param1=param1, param2=param2,
@@ -275,9 +272,9 @@ class Camera():
         
         return circles
 
-    def find_circl_by_contours(self, mask: np.ndarray) -> list:
+    def find_circle_by_contours(self, mask: np.ndarray) -> list:
         """
-        Docstring for find_circl_contours
+        Find circles in a mask using contour analysis.
         """
         cnts, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         print("contour areas:", [cv.contourArea(c) for c in cnts])
@@ -381,17 +378,38 @@ class Camera():
                     depth = None # Placeholder depth
                     yield frame_id, rgb, depth
 
-def circl_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 100,
+def circle_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 100,
                             param1: float = 100, param2: float = 20,
                             minRadius: int = 30, maxRadius: int = 500) -> np.ndarray:
         """
-        Docstring for circl_hough_transform
+        Use circle Hough transform to detect circles in the mask.
         """
         circles = cv.HoughCircles(mask, cv.HOUGH_GRADIENT, dp, minDist,
                                 param1=param1, param2=param2,
                                 minRadius=minRadius, maxRadius=maxRadius)
         return circles
+
+
 def main():
+    camera = Camera(display=True, display_target="mask")
+    camera.start()
+    try:
+        if camera.display:
+            # Matplotlib will handle updates via animation
+            plt.show(block=True)  # This blocks until window is closed
+        else:
+            # If not displaying, just keep running
+            while True:
+                time.sleep(0.1)
+                
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        camera.shutdown()
+        print("Program exited cleanly.")
+
     # for entry in os.scandir("./object_detector/images"):
     #     if entry.name.endswith(".jpg") or entry.name.endswith(".png"):
     #         ## print full path: entry.path
@@ -492,24 +510,6 @@ def main():
     #         ax[4].axis('off')
     #         plt.show()
 
-    camera = Camera(display=True, display_target="mask")
-    camera.start()
-    try:
-        if camera.display:
-            # Matplotlib will handle updates via animation
-            plt.show(block=True)  # This blocks until window is closed
-        else:
-            # If not displaying, just keep running
-            while True:
-                time.sleep(0.1)
-                
-    except KeyboardInterrupt:
-        print("\nInterrupted by user")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        camera.shutdown()
-        print("Program exited cleanly.")
 
 if __name__ == "__main__":
     main()

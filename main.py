@@ -63,7 +63,6 @@ def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
         return True
 
 
-
 def main(args):
     print("[Args: ", args, " ]")
 
@@ -84,11 +83,13 @@ def main(args):
     camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
     ball_position = None
     last_ball_position = None
+    gripper_start_position = [-0.6, 0.2, 2]
     # Setup everything for path planning and execution
     q_home = C.getJointState()
+    print(q_home)
     n_phases = 1
-    
-    if args.input in camera_pos:
+
+    if args.input in camera_pos and not args.real:
         bot = ry.BotOp(C=C, useRealRobot=args.real)
         # fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
         # fx, fy, cx, cy = fxycxy
@@ -100,8 +101,7 @@ def main(args):
         # print("Camera position: ", camera_coor)
         # print("Camera rotation: \n", camera_rot)
 
-        home_position = [-0.6, 0.2, 2]
-        komo = planner.setup_komo(C, n_phases, home_position)
+        komo = planner.setup_komo(C, n_phases, gripper_start_position)
         path = planner.get_path_from_komo(komo)
 
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
@@ -122,9 +122,10 @@ def main(args):
             C=C, 
             input=args.input, 
             bot=bot, 
-            camera_pos= camera_pos, 
+            camera_pos=camera_pos, 
             display=True,
             display_target="rgb")
+        
         camera.start()
         is_moving = False
         plan_cooldown = 0.1  # seconds
@@ -194,7 +195,7 @@ def main(args):
             print("\nInterrupted by user")
         except Exception as e:
             # Print the full traceback
-            traceback.print_exc()  # Prints to stderr
+            traceback.print_exc() 
             
             # Or get traceback as string
             error_msg = traceback.format_exc()
@@ -213,17 +214,10 @@ def main(args):
         rgb, depth = None, None
     
 
-    # Setup everything for path planning and execution
-    # q_home = C.getJointState()
-    # n_phases = 1
-    # ball_position = camera.ball_position if camera.ball_position is not None else [-0.6, 0.2, 2]
-    # komo = planner.setup_komo(C, n_phases, ball_position)
-    # path = planner.get_path_from_komo(komo)
     if path is None:
         return
 
     if not args.botop or args.sim_only:
-        # path = np.load("motion/ball_shot.npy")
         sim = SimWrapper(C, display_delay=0.1)
         # sim.close_gripper()
         sim.run_trajectory(path, n_phases)
@@ -256,7 +250,6 @@ if __name__ == "__main__":
     p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  
     p.add_argument("--input", type=str, default="wrist", help="Select camera: wrist, top or standalone")
     p.add_argument("--display", action="store_true", default=False, help="Show camera view")
-    # p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
 
     args = p.parse_args()
 
