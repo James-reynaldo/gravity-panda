@@ -83,8 +83,10 @@ def main(args):
     camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
     ball_position = None
     thread_camera = None
+    bot = ry.BotOp(C=C, useRealRobot=args.real)
+
     if args.input in camera_pos:
-        bot = ry.BotOp(C=C, useRealRobot=args.real)
+        
         fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
         fx, fy, cx, cy = fxycxy
         K = np.array([[fx, 0,  cx],
@@ -128,7 +130,6 @@ def main(args):
         sim.reset()
 
     else:
-        bot = ry.BotOp(C, useRealRobot=args.real)
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
         bot.moveTo(q_home)
         # Close gripper

@@ -9,8 +9,8 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     table = C.getFrame("table")
     table_height = table.getSize()[2] * .5
     cup = C.getFrame("cup")
-    tol_gripper = 0.1
-    cup_size = cup.getSize()[0] + tol_gripper
+    tol_fingertip = 0.1
+    cup_size = cup.getSize()[0] + tol_fingertip
 
     target_height = table_height + 0.7                                                  # 0.8 is more safe
     target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
