@@ -80,11 +80,13 @@ class RealSense():
         K = np.array([[intr.fx, 0, intr.ppx],
                     [0, intr.fy, intr.ppy],
                     [0, 0, 1]], dtype=np.float64)
+        
         # Map RS distortion to OpenCV k1,k2,p1,p2,k3 (Brown-Conrady)
         if intr.model in (rs.distortion.brown_conrady, rs.distortion.inverse_brown_conrady):
             coeffs = np.array(intr.coeffs[:5], dtype=np.float64)
         else:
             coeffs = np.zeros(5, dtype=np.float64)
+
         return K, coeffs, intr.width, intr.height
     
     def process_yolo_result(self, results):

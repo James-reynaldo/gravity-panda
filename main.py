@@ -18,8 +18,8 @@ from motion import komo_planner as planner
 def gen_scene():
     """Generate robot scene (environment) and return robotic-Config."""
     C = ry.Config()
-    C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
-    C.delFrame("panda_collCameraWrist")
+    C.addFile(ry.raiPath("scenarios/pandasTable.g"))
+    # C.delFrame("panda_collCameraWrist")
     C.addFile("config/config_gp.g")
 
     # Attach cup as basic cylinder to robot gripper
@@ -100,7 +100,7 @@ def main(args):
         # print("Camera position: ", camera_coor)
         # print("Camera rotation: \n", camera_rot)
 
-        home_position = [-0.2, 0.2, 2]
+        home_position = [-0.6, 0.2, 2]
         komo = planner.setup_komo(C, n_phases, home_position)
         path = planner.get_path_from_komo(komo)
 
@@ -138,6 +138,7 @@ def main(args):
                     while camera.running:
                         current_time = time.time()
                         ball_position = camera.ball_position 
+                        
                         # Check motion status FIRST (outside ball check)
                         time_to_end = bot.getTimeToEnd()
                         if time_to_end > 0:
@@ -168,7 +169,7 @@ def main(args):
                                 komo = planner.setup_komo(C, n_phases, ball_position)
                                 path = planner.get_path_from_komo(komo)
                                 if path is not None:
-                                    # # Run reference path
+                                    # Run reference path
                                     times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) #Fixes duration to only 1s
                                     bot.move(path, times)
                                     
@@ -178,7 +179,9 @@ def main(args):
                                     print(f"Started motion, TTE: {TTE:.2f}s")
                         else:
                             print("NO BALL DETECTED...")
-                        plt.pause(0.1)  # Allow matplotlib to update
+
+                        # Allow matplotlib to update
+                        plt.pause(0.1)
                        
                 except KeyboardInterrupt:
                     print("\nInterrupted by user")
@@ -225,7 +228,7 @@ def main(args):
         # sim.close_gripper()
         sim.run_trajectory(path, n_phases)
         for _ in range(50):
-            sim.step([], ry.ControlMode.none)  # step sim to observe
+            sim.step([], ry.ControlMode.none)
         sim.reset()
 
     else:
@@ -250,11 +253,10 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--sim-only", action="store_true", default=False, help="Only evaluate the simulator")
     p.add_argument("--botop", action="store_true", default=False, help="Use botop in addition to the simulator for a comparison.")
-    p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
+    p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  
     p.add_argument("--input", type=str, default="wrist", help="Select camera: wrist, top or standalone")
     p.add_argument("--display", action="store_true", default=False, help="Show camera view")
-    p.add_argument("--aruco", action="store_true", default=False, help="Detect AruCo markers in the RGB image")
-    p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
+    # p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
 
     args = p.parse_args()
 

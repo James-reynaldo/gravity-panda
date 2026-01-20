@@ -7,7 +7,7 @@ from typing import Union, List, Any
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
-from object_detector.aruco_detector import detect_aruco_markers
+from prev_exercises.aruco_detector import detect_aruco_markers
 
 
 def gen_scene() -> ry.Config:

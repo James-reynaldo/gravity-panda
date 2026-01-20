@@ -10,7 +10,6 @@ In this project we want a pandas robot arm to catch a ball with a cup attached t
 
 These are the args that can be added when running the project:
 ```
-
 #usage: main.py [--botop] [--real | --sim-only] [--input INPUT] [--display]
 
 # options:
@@ -20,10 +19,8 @@ These are the args that can be added when running the project:
 #  --display      Show camera view
 #  --sim-only     Only run simulation using precomputed trajectory
 
-
-For now, run: uv run main.py --input top --display or python main.py --input top --display
 ```
-
+For now, run: ```uv run main.py --input top --display``` or ```python main.py --input top --display```
 
 ## Visuals
 Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
