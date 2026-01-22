@@ -46,10 +46,12 @@ def main(args):
         rgb, depth = camera.acquire_rgb_and_depth()
 
     else:
-        camera = RobotCamera(C, bot, args.input)
-        if camera is not None:
-            detector = Detector(camera, display=True)
-            detector.run()
+        camera = RobotCamera(C, bot, args.input, args.display)
+        camera.open(run_loop=True)
+        exit(0)
+        # if camera is not None:
+        #     detector = Detector(camera, display=True)
+        #     detector.run()
 
 
     # Setup everything for path planning and execution
