@@ -32,6 +32,13 @@ class RealSense():
         self.profile = None
         self.serial = None
         self.is_grabbing = False
+
+        # Initialize camera parameter with default values
+        self.K = np.array([[1.0, 0,  1.0],
+                    [0,  1.0, 1.0],
+                    [0,  0,  1.0]]) 
+        self.position = np.array([0.0, 0.0, 0.0])
+        self.rotation = np.eye(3)
         
     def connect(self, serial=None):
         print("[RealSense] Connecting device...")

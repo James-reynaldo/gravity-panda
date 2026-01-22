@@ -5,63 +5,17 @@ import numpy as np
 import robotic as ry
 import matplotlib.pyplot as plt
 from typing import Union, List, Any
+import cv2 as cv
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
-from object_detector.detector import do_camera
+from camera.bot_camera import RobotCamera
+
 from simulation.sim_wrapper import SimWrapper
+from simulation.scene_builder import SceneBuilder
+
+from object_detector.detector import Detector
 from motion import komo_planner as planner
-
-
-
-def gen_scene():
-    """Generate robot scene (environment) and return robotic-Config."""
-    C = ry.Config()
-    C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
-    C.delFrame("panda_collCameraWrist")
-    C.addFile("config/config_gp.g")
-
-    # Attach cup as basic cylinder to robot gripper
-    C.addFrame("cup", "l_finger1")
-    finger = C.getFrame("l_finger1")
-    finger_orientation = finger.getQuaternion()
-    cup = C.getFrame("cup")
-    cup.setShape(ry.ST.cylinder, [0.06, 0.06])
-    cup.setColor([0.8, 0.3, 0.3])
-    
-    rot_90_deg_rx = np.array([0.7071, 0.0, -0.7071, 0.0])
-
-    w1, x1, y1, z1 = finger_orientation
-    w2, x2, y2, z2 = rot_90_deg_rx
-
-    q_final = np.array([
-        w1*w2 - x1*x2 - y1*y2 - z1*z2,
-        w1*x2 + x1*w2 + y1*z2 - z1*y2,
-        w1*y2 - x1*z2 + y1*w2 + z1*x2,
-        w1*z2 + x1*y2 - y1*x2 + z1*w2
-    ])
-
-    # Set cup pose
-    cup.setRelativePosition([-0.02, -0.035, 0.065]) 
-    cup.setQuaternion(q_final.tolist())
-
-    return C
-
-
-def check_config(C: ry.Config, to_del: List[Any] = [], message="") -> bool:
-    user_key = C.view(pause=True, message="Press q to quit (any other key to continue)")
-    if user_key == ord("q"):
-        print("Received q. Exiting scene...")
-        del C
-        for obj in to_del:
-            del obj
-        return False
-
-    else:
-        print("Continuing...")
-        return True
-
-
 
 def main(args):
     print("[Args: ", args, " ]")
@@ -72,44 +26,31 @@ def main(args):
             "physx/angularDamping": 0.1,
             "physx/defaultFriction": 100.0,
             "physx/defaultRestitution": 0.7,
-            "botsim/verbose": 0,
+            "botsim/verbose": 0,                # Increase verbosity to 2 for more info
         }
-    )  # Increase verbosity to 2 for more info
+    )  
 
-    C = gen_scene()
-    if not check_config(C):
-        exit(0)
-
-    camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
+    # Build robot scene
+    C = SceneBuilder(ry.raiPath("scenarios/pandaSingle.g"), "./config/config_gp.g").build()
+    if C is None:
+        return
+    bot = ry.BotOp(C=C, useRealRobot=args.real)
     ball_position = None
     thread_camera = None
-    bot = ry.BotOp(C=C, useRealRobot=args.real)
 
-    if args.input in camera_pos:
-        
-        fxycxy = bot.getCameraFxycxy(camera_pos[args.input]) 
-        fx, fy, cx, cy = fxycxy
-        K = np.array([[fx, 0,  cx],
-                    [0,  fy, cy],
-                    [0,  0,  1.0]]) 
-        camera_coor = C.getFrame(camera_pos[args.input]).getPosition()
-        camera_rot = C.getFrame(camera_pos[args.input]).getRotationMatrix()
-        # print("Camera position: ", camera_coor)
-        # print("Camera rotation: \n", camera_rot)
-
-        
-
-        thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
-        thread_camera.start()
-
-    elif args.input == "standalone":
+    if args.input == "standalone":
         camera = RealSense()
+        print("Using default camera parameters.")
         camera.connect()
         camera.start_grabbing()
         rgb, depth = camera.acquire_rgb_and_depth()
+
     else:
-        rgb, depth = None, None
-    
+        camera = RobotCamera(C, bot, args.input)
+        if camera is not None:
+            detector = Detector(camera, display=True)
+            detector.run()
+
 
     # Setup everything for path planning and execution
     q_home = C.getJointState()
