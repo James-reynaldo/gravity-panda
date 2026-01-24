@@ -35,8 +35,6 @@ def main(args):
     if C is None:
         return
     bot = ry.BotOp(C=C, useRealRobot=args.real)
-    ball_position = None
-    thread_camera = None
 
     if args.input == "standalone":
         camera = RealSense()
@@ -46,23 +44,32 @@ def main(args):
         rgb, depth = camera.acquire_rgb_and_depth()
 
     else:
-        camera = RobotCamera(C, bot, args.input, args.display)
-        camera.open(run_loop=True)
-        exit(0)
-        # if camera is not None:
-        #     detector = Detector(camera, display=True)
-        #     detector.run()
+        camera = RobotCamera(C, bot, args.input)
+        camera.open(args.display)
+        camera.run()
 
+
+
+
+
+
+
+
+
+    # ===== Control Robot =====
 
     # Setup everything for path planning and execution
     q_home = C.getJointState()
     n_phases = 1
+    ball_position = None
     ball_position = ball_position if ball_position is not None else [-0.6, 0.2, 2]
+    # Plan path
     komo = planner.setup_komo(C, n_phases, ball_position)
     path = planner.get_path_from_komo(komo)
     if path is None:
         return
 
+    # Execute path in simulation
     if not args.botop or args.sim_only:
         # path = np.load("motion/ball_shot.npy")
         sim = SimWrapper(C, display_delay=0.1)
@@ -72,6 +79,7 @@ def main(args):
             sim.step([], ry.ControlMode.none)  # step sim to observe
         sim.reset()
 
+    # Execut epath with botop
     else:
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
         bot.moveTo(q_home)
@@ -85,15 +93,13 @@ def main(args):
         bot.move(path, times)
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
-    if thread_camera:
-        thread_camera.join(timeout=0.5)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
+    p.add_argument("--input", type=str, default="top", help="Select camera: wrist, top or standalone")
     p.add_argument("--sim-only", action="store_true", default=False, help="Only evaluate the simulator")
     p.add_argument("--botop", action="store_true", default=False, help="Use botop in addition to the simulator for a comparison.")
     p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
-    p.add_argument("--input", type=str, default="wrist", help="Select camera: wrist, top or standalone")
     p.add_argument("--display", action="store_true", default=False, help="Show camera view")
     p.add_argument("--aruco", action="store_true", default=False, help="Detect AruCo markers in the RGB image")
     p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
