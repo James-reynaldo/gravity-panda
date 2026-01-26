@@ -3,6 +3,7 @@ import cv2 as cv
 from ultralytics import YOLO
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
+import robotic as ry
 
 @dataclass
 class Component:
@@ -36,15 +37,16 @@ class BallDetector():
     
 
     def run(self):
-        for (frame, depth_frame) in self.camera.get_rgb_and_depth_frame():
-
+        for (frame, depth_frame) in self.camera.get_rgb_and_depth():
             # YOLO prediction
             results = self.predict_frame(frame, confidence=0.5)
             ball_list = self.process_results(results)
-            if self.display:
-                self.show_result(frame, ball_list)
-                if cv.waitKey(1) & 0xFF == 27:
-                    break
+            for ball in ball_list:
+                if self.display:
+                    self.show_result(frame, ball)
+                    # self.get_world_from_camera(ball, depth_frame)
+            if cv.waitKey(1) & 0xFF == 27:
+                break
         cv.destroyAllWindows()
                 
         # TODO: Detect ball in frame
@@ -88,62 +90,68 @@ class BallDetector():
                     comp_list.append(component)
         return comp_list
     
-    def show_result(self, frame, ball_list):
-        # Draw detections
-        for ball in ball_list:
-            x1, y1, x2, y2 = map(int, ball.bbox)
-            cv.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv.putText(frame, f"{ball.name} {ball.confidence:.2f}",
-                        (x1, y1 - 10),
-                        cv.FONT_HERSHEY_SIMPLEX,
-                        0.6, (255, 0, 0), 2)
-            # Draw center point
-            cx, cy = map(int, ball.center)
-            cv.circle(frame, (cx, cy), 2, (0, 255, 255), -1)
+    def show_result(self, frame, ball):
+        x1, y1, x2, y2 = map(int, ball.bbox)
+        cv.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv.putText(frame, f"{ball.name} {ball.confidence:.2f}",
+                    (x1, y1 - 10),
+                    cv.FONT_HERSHEY_SIMPLEX,
+                    0.6, (255, 0, 0), 2)
+        # Draw center point
+        cx, cy = map(int, ball.center)
+        cv.circle(frame, (cx, cy), 2, (0, 255, 255), -1)
 
 
         cv.imshow("Blue Ball Detection", frame)
 
-    def get_world_from_camera(
-        self,
-        ball:Component,
-        depth_frame: np.ndarray,
-    ) -> Optional[np.ndarray]:
 
-        # Validate inputs
-        if self.K.shape != (3, 3) or self.camera_rot.shape != (3, 3):
-            print("Error: Invalid input shapes")
-            return None
+    def rt_to_T(self, R, t):
+        T = np.eye(4, dtype=float)
+        T[:3,:3] = R
+        T[:3, 3] = t.reshape(3)
+        return T
+
+    def rvec_tvec_to_T(self, rvec, tvec):
+        R, _ = cv.Rodrigues(rvec)
+        return self.rt_to_T(R, tvec)     
+    
+    def matrix2vector(self, T):
+        vec = np.zeros(7) 
+        R = T[:3, :3]
+        quat = ry.Quaternion().setMatrix(R).asArr() 
+        vec[:3] = T[:3, 3]
+        vec[3:] = quat
+        return vec  
+
+    def get_world_from_camera(self, ball:Component, depth_frame: np.ndarray) -> Optional[np.ndarray]:
+
+        x1, y1, x2, y2 = ball.bbox
+        image_points = np.array([
+            [x1, y1],  # top-left
+            [x2, y1],  # top-right
+            [x2, y2],  # bottom-right
+            [x1, y2]   # bottom-left
+        ], dtype=np.float32)
+        x_length = ball.bbox[2] - ball.bbox[0]
+        y_length = ball.bbox[3] - ball.bbox[1]
+        object_points = np.array([
+            [-x_length/2,  y_length/2, 0],
+            [ x_length/2,  y_length/2, 0],
+            [ x_length/2, -y_length/2, 0],
+            [-x_length/2, -y_length/2, 0]
+        ], dtype=np.float32)
+
+        T_world2cam = np.array([[-1, 0, 0, 0],[0, 1, 0, 0.45],[0, 0, -1, 2.30],[0, 0, 0, 1]]) 
+        T_flipY = np.diag([1, -1, 1, 1])
+        dist = np.zeros(5)
+        _, rvec, tvec = cv.solvePnP(objectPoints=object_points, imagePoints=image_points, cameraMatrix=self.K, distCoeffs=dist)
+        T_c_m = self.rvec_tvec_to_T(rvec, tvec)
+        T_c_m_flip = T_flipY @ T_c_m
+        T_w_m  = T_world2cam @ T_c_m_flip
+        pose = self.matrix2vector(T_w_m)
+
+        print(pose)
         
-        pixel_u, pixel_v = map(int, ball.center)
-        
-        # Get depth_frame with bounds checking
-        if depth_frame is  None:
-            return None
-        if not (0 <= pixel_v < depth_frame.shape[0] and 0 <= pixel_u < depth_frame.shape[1]):
-            print(f"Error: Pixel values ({pixel_u}, {pixel_v}) out of depth frame limits.")
-            return None
-            
-        depth_frame_value = float(depth_frame[pixel_v, pixel_u])
-        
-        if depth_frame_value <= 0 or not np.isfinite(depth_frame_value):
-            print(f"Warning: Invalid depth_frame {depth_frame_value} at ({pixel_u}, {pixel_v})")
-            return None
-        
-        # Prevent division by zero
-        if self.K[0, 0] == 0 or self.K[1, 1] == 0:
-            print("Error: Zero focal length")
-            return None
-        
-        # Convert to camera coordinates (vectorized)
-        camera_coordinates = np.array([
-            (pixel_u - self.K[0, 2]) * depth_frame_value / self.K[0, 0],
-            (pixel_v - self.K[1, 2]) * depth_frame_value / self.K[1, 1],
-            depth_frame_value
-        ], dtype=np.float64)
-        
-        # Transform to world coordinates
-        return self.camera_rot.T @ camera_coordinates + self.camera_coor.flatten()
 
         
 
