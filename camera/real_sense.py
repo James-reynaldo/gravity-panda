@@ -58,19 +58,17 @@ class RealSense():
         self.is_grabbing = True
 
     def acquire_images(self, serial=None):
-        try:
-            while True:
-                if not self.is_grabbing:
-                    raise Exception        
-                frames = self.pipeline.wait_for_frames()
-                color_frame = frames.get_color_frame()
-                depth_frame = frames.get_depth_frame()
-            
-                if not color_frame:
-                    continue
-                return color_frame, depth_frame                     
-        finally:
-            self.pipeline.stop()
+        while True:
+            if not self.is_grabbing:
+                raise Exception        
+            frames = self.pipeline.wait_for_frames()
+            color_frame = frames.get_color_frame()
+            depth_frame = frames.get_depth_frame()
+        
+            if not color_frame:
+                continue
+            return color_frame, depth_frame                     
+
 
         return None, None
 
@@ -104,4 +102,7 @@ class RealSense():
                     bbox = box.xyxy[0]
                     detection_list.append(DetectedObject(name, bbox))
         return detection_list
+    
+    def close(self):
+        self.pipeline.stop()
     

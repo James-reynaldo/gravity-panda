@@ -1,12 +1,17 @@
-import argparse
+import threading
 import cv2 as cv
 import numpy as np
 from typing import Tuple, Optional
 from camera.real_sense import RealSense
 from camera.bot_camera import RobotCamera
-from ultralytics import YOLO
+import robotic as ry
+import matplotlib.pyplot as plt
+import os
+import time
+import queue
+from matplotlib.animation import FuncAnimation
 
-class Detector():
+class YOLODetector():
     def __init__(self, camera: RealSense|RobotCamera, kernel_size=(5,5), display:bool=False) -> None:
         # --- Image Color Filter ---
         self.color_lower = np.array([90, 50, 50])
@@ -162,7 +167,7 @@ class Detector():
 
     # ===== YOLO =====        
 
-    def predict_frame(self, model:YOLO, frame, confidence):
+    def predict_frame(self, model, frame, confidence):
         """Predicts objects in a camera frame and returns the predicted results."""
         try:
             return model.predict(frame, verbose=False, conf=confidence)
@@ -186,16 +191,11 @@ class Detector():
 
             
         return comp_list
-import robotic as ry
-import matplotlib.pyplot as plt
-import os
-import queue
-from matplotlib.animation import FuncAnimation
 
 
-class Camera():
-    def __init__(self, C:ry.Config= None, input:str= None, bot: ry.BotOp= None, 
-                 camera_pos:dict= None, display = False, max_frames:int= None, 
+class Detector ():
+    def __init__(self, C:ry.Config, input:str, bot: ry.BotOp, 
+                 camera_pos:dict, display = False, max_frames:int = 10, 
                  display_target = "rgb", kernel_size = (5, 5), min_area = 100) -> None:
         self.bot = bot
         self.C = C
@@ -379,7 +379,7 @@ class Camera():
         """
         mask_blur = self.filter_image(rgb)
         # circles = self.circl_hough_transform(mask_blur)
-        candidates = self.find_circl_by_contours(mask_blur.copy())
+        candidates = self.find_circle_by_contours(mask_blur.copy())
         if not candidates:
             print("NO BALL candidates found.")
             return None, None, mask_blur
@@ -413,14 +413,12 @@ class Camera():
         """Simple detection - yields (world_coor, circle)"""
         for _, rgb, depth in image_generator:
             world_coor, circle, mask_blur = self.process_frame(rgb, depth)
+            rgb_display = rgb
             if world_coor is None:
-                print("world_coor is None, skipping display drawing.")
-                rgb_display = rgb.copy()
                 yield None, mask_blur, rgb_display
                 continue
             # Display logic if requested
             if self.display:
-                rgb_display = rgb.copy()
                 if circle is not None:
                     display_circles = np.array([[circle]])  # Shape [1, 1, 3]
                     rgb_display = self.draw_detected_circles(rgb, display_circles)
@@ -572,127 +570,3 @@ def circle_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 
         return circles
 
 
-def main():
-    camera = Camera(display=True, display_target="mask")
-    camera.start()
-    try:
-        if camera.display:
-            # Matplotlib will handle updates via animation
-            plt.show(block=True)  # This blocks until window is closed
-        else:
-            # If not displaying, just keep running
-            while True:
-                time.sleep(0.1)
-                
-    except KeyboardInterrupt:
-        print("\nInterrupted by user")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        camera.shutdown()
-        print("Program exited cleanly.")
-
-    # for entry in os.scandir("./object_detector/images"):
-    #     if entry.name.endswith(".jpg") or entry.name.endswith(".png"):
-    #         ## print full path: entry.path
-    #         print("Reading image: ", entry.name)
-    #         frame_id = entry.name.split("_")[0]
-    #         rgb_old = cv.imread(entry.path)
-    #         rgb = cv.cvtColor(rgb_old, cv.COLOR_BGR2RGB)
-    #         depth = None # Placeholder depth
-    #         # yield frame_id, rgb, depth
-    #         # Convert RGB to HSV (better for color segmentation)
-    #         hsv = cv.cvtColor(rgb, cv.COLOR_RGB2HSV)
-
-    #         # Adjust these values based on your specific blue
-    #         lower_blue = np.array([90, 50, 50])    # Dark blue
-    #         upper_blue = np.array([130, 255, 170]) # Light blue
-            
-    #         # Create mask for blue regions
-    #         blue_mask = cv.inRange(hsv, lower_blue, upper_blue)
-    #         # Bitwise-AND mask and original imageE
-    #         rgb_display = rgb.copy()
-    #         rgb_display2 = rgb.copy()
-    #         mask_blur = cv.medianBlur(blue_mask, 5)
-
-    #         # circles = circl_hough_transform(mask_blur)
-
-    #         # --- SEPARATE TOUCHING OBJECTS (Solution 1) ---
-    #         kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (30, 30))
-    #         mask_sep = cv.morphologyEx(mask_blur, cv.MORPH_OPEN, kernel)
-
-    #         cnts, _ = cv.findContours(mask_sep, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    #         # Keep only large blobs
-    #         cnts = [c for c in cnts if cv.contourArea(c) > 500]
-
-    #         print("Found {} contours after area filtering.".format(len(cnts)))
-
-    #         #draw contours with different color
-    #         for i, c in enumerate(cnts):
-    #             color = (255 - i*50, i*50, 0)
-    #             cv.drawContours(rgb_display2, [c], -1, color, 25)
-
-    #         candidates = []
-
-    #         for c in cnts:
-    #             area = cv.contourArea(c)
-
-
-    #             perimeter = cv.arcLength(c, True)
-    #             if perimeter == 0:
-    #                 continue
-
-    #             circularity = 4 * np.pi * area / (perimeter * perimeter)
-
-    #             # Ball ≈ circular, screen ≈ not
-    #             if circularity > 0.40:
-    #                 candidates.append(c)
-            
-    #         if not candidates:
-    #             print("NO BALL candidates found.")
-    #             rgb_display = rgb.copy()
-                
-    #         else:
-    #             c = max(candidates, key=cv.contourArea)
-
-    #             (x, y), r = cv.minEnclosingCircle(c)
-
-    #             #plot circle
-    #             cv.circle(rgb_display, (int(x), int(y)), int(r), (0, 255, 0), 25)
-    #             cv.circle(rgb_display, (int(x), int(y)), 2, (0, 0, 255), 50)
-
-    #         # if circles is not None and len(circles[0]) > 0:
-    #         #     circles_array = circles[0]
-    #         #     max_radius_idx = np.argmax(circles_array[:, 2])
-    #         #     best_circle = np.uint16(np.around(circles_array[max_radius_idx]))
-    #         #     print(f"best radius {best_circle[2]}")
-    #         #     # draw the outer circle
-    #         #     cv.circle(rgb_display, (best_circle[0], best_circle[1]), best_circle[2], (0, 255, 0), 25)
-    #         #     # draw the center of the circle
-    #         #     cv.circle(rgb_display, (best_circle[0], best_circle[1]), 2, (0, 0, 255), 50)
-    #         # else:
-    #         #     print("No circles detected.")
-    #         ##plotting
-    #         # Setup plot
-    #         fig, ax = plt.subplots(1, 5, figsize=(10, 5))
-    #         ax[0].imshow(rgb, cmap='gray')
-    #         ax[0].set_title("Original")
-    #         ax[0].axis('off')
-    #         ax[1].imshow(mask_blur, cmap='gray')
-    #         ax[1].set_title("Blurred Mask")      
-    #         ax[1].axis('off')
-    #         ax[2].imshow(mask_sep, cmap='gray')
-    #         ax[2].set_title("Mask Sep")      
-    #         ax[2].axis('off')
-    #         ax[3].imshow(rgb_display2)
-    #         ax[3].set_title("Contours")
-    #         ax[3].axis('off')
-    #         ax[4].imshow(rgb_display)
-    #         ax[4].set_title("Detected Circle(s)")
-    #         ax[4].axis('off')
-    #         plt.show()
-
-
-if __name__ == "__main__":
-    main()
-    
