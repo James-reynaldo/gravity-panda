@@ -6,7 +6,7 @@ import robotic as ry
 # ===== Own packages =====
 from camera.real_sense import RealSense
 from camera.bot_camera import RobotCamera
-from object_detector.new_detector import Detector
+from object_detector.new_detector import BallDetector
 
 from simulation.sim_wrapper import SimWrapper
 from simulation.scene_builder import SceneBuilder
@@ -44,13 +44,13 @@ def main(args):
         camera = RobotCamera(C, bot, args.input)
         camera.open(display=args.display)
 
-    detector = Detector(camera=camera, display=True)
+    detector = BallDetector(camera=camera, display=args.display)
 
     detector.run()
     exit(0)
 
     # ===== Setup ball =====
-    test_ball_positions = [[-1.2, 0.2, 2], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
+    test_ball_positions = [[-.8, 0.2, 2], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
 
     if  args.botop:
         q_home = C.getJointState()

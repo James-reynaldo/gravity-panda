@@ -10,7 +10,7 @@ cameraTopMiddle(world): {
 }
 
 ball: { 
-    pose: [-1, 0.2, 2], 
+    pose: [-.8, 0.2, 2], 
     shape: sphere, 
     size: [0.0315], 
     color: [0, 0.33, 0.66],

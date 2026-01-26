@@ -97,7 +97,7 @@ def main(args):
         else:                                   # (args.input == "standalone")
             cam.connect()
             cam.start_grabbing()
-            rgb, depth = cam.acquire_rgb_and_depth()
+            rgb, depth = cam.get_rgb_and_depth()
                            
         fig = plt.figure(figsize=(10,5))
         axs = fig.subplots(1, 2)
@@ -126,7 +126,7 @@ def main(args):
         else:                                   # args.input == "standalone"
             cam.connect()
             cam.start_grabbing()
-            rgb, _ = cam.acquire_rgb_and_depth()
+            rgb, _ = cam.get_rgb_and_depth()
             K, dist, W, H = cam.get_color_intrinsics()           
 
         # Detect and display markers         
