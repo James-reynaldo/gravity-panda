@@ -36,13 +36,13 @@ class RobotCamera():
                                 [0,  0,  1.0]])
             self.coordinates = self.C.getFrame(self.camera_used).getPosition()
             self.rotation = self.C.getFrame(self.camera_used).getRotationMatrix()
-        
+            
     def grab_once(self):
         rgb, depth, _ = self.bot.getImageDepthPcl(self.camera_used)
         rgb = cv.cvtColor(rgb, cv.COLOR_BGR2RGB)
         return rgb, depth
 
-    def frame_generator(self):
+    def get_rgb_and_depth(self):
         while not self._stop_event.is_set():
             rgb,depth = self.grab_once()
             yield rgb, depth
@@ -51,7 +51,7 @@ class RobotCamera():
         """Show camera view. Also, this is a small example of how to get the camera frame."""
         if display is not None:
             self.display = display
-        for (rgb, depth) in self.frame_generator():
+        for (rgb, depth) in self.get_rgb_and_depth():
             if self.display:
                 cv.imshow("RobotCamera Feed", rgb)
                 if cv.waitKey(10) & 0xFF == 27:

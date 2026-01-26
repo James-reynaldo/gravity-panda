@@ -6,6 +6,7 @@ import robotic as ry
 import matplotlib.pyplot as plt
 from typing import Union, List, Any
 import cv2 as cv
+from ultralytics import YOLO
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
@@ -30,78 +31,72 @@ def main(args):
         }
     )  
 
-    # Build robot scene
-    C = SceneBuilder(ry.raiPath("scenarios/pandaSingle.g"), "./config/config_gp.g").build()
+    # ===== Build simulation environment =====
+
+    C = SceneBuilder(ry.raiPath("scenarios/pandasTable.g"), "./config/config_gp.g").build()
     if C is None:
         return
     bot = ry.BotOp(C=C, useRealRobot=args.real)
+
+    # ==== Choose input camera =====
 
     if args.input == "standalone":
         camera = RealSense()
         print("Using default camera parameters.")
         camera.connect()
         camera.start_grabbing()
-        rgb, depth = camera.acquire_rgb_and_depth()
 
     else:
         camera = RobotCamera(C, bot, args.input)
-        camera.open(args.display)
-        camera.run()
+        camera.open(display=args.display)
 
 
+    # ===== Setup ball =====
+    ball_positions = [[-0.6, 0.2, 1.6], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
 
 
-
-
-
-
-
-    # ===== Control Robot =====
-
-    # Setup everything for path planning and execution
-    q_home = C.getJointState()
-    n_phases = 1
-    ball_position = None
-    ball_position = ball_position if ball_position is not None else [-0.6, 0.2, 2]
-    # Plan path
-    komo = planner.setup_komo(C, n_phases, ball_position)
-    path = planner.get_path_from_komo(komo)
-    if path is None:
-        return
-
-    # Execute path in simulation
-    if not args.botop or args.sim_only:
-        # path = np.load("motion/ball_shot.npy")
-        sim = SimWrapper(C, display_delay=0.1)
-        # sim.close_gripper()
-        sim.run_trajectory(path, n_phases)
-        for _ in range(50):
-            sim.step([], ry.ControlMode.none)  # step sim to observe
-        sim.reset()
-
-    # Execut epath with botop
-    else:
+    if  args.botop:
+        q_home = C.getJointState()
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
         bot.moveTo(q_home)
-        # Close gripper
         bot.gripperMove(ry.ArgWord._left, 0.)
-        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
-        # Run reference path
-        times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+        bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+
+    # ===== MAIN LOOP =====
+
+    for i in range(len(ball_positions)):
+        # rgb, depth = camera.grab_once()
 
 
-        bot.move(path, times)
-        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # ===== Compute Robot Path =====
+        n_phases = 1
+        ball_position = ball_positions[i]
+        ball = C.getFrame("ball")
+        ball.setPosition(ball_position)
+        komo = planner.setup_komo(C, n_phases, ball_position)
+        path = planner.get_path_from_komo(komo, args.display)
+        if path is None:
+            continue
+
+
+        # Execute path with botop or in simulation
+        if  args.botop:
+            times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+            bot.move(path, times)
+            bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+
+        else:
+            sim = SimWrapper(C, display_delay=0.1)
+            sim.run_trajectory(path, n_phases)
+            # sim.reset()
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--input", type=str, default="top", help="Select camera: wrist, top or standalone")
-    p.add_argument("--sim-only", action="store_true", default=False, help="Only evaluate the simulator")
     p.add_argument("--botop", action="store_true", default=False, help="Use botop in addition to the simulator for a comparison.")
     p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
     p.add_argument("--display", action="store_true", default=False, help="Show camera view")
-    p.add_argument("--aruco", action="store_true", default=False, help="Detect AruCo markers in the RGB image")
     p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
 
     args = p.parse_args()
