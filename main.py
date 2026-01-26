@@ -52,7 +52,7 @@ def main(args):
 
 
     # ===== Setup ball =====
-    ball_positions = [[-0.6, 0.2, 1.6], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
+    ball_positions = [[-1.2, 0.2, 2], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
 
 
     if  args.botop:
@@ -64,7 +64,7 @@ def main(args):
 
     # ===== MAIN LOOP =====
 
-    for i in range(len(ball_positions)):
+    for i in range(1): #range(len(ball_positions)):
         # rgb, depth = camera.grab_once()
 
 
@@ -88,6 +88,7 @@ def main(args):
         else:
             sim = SimWrapper(C, display_delay=0.1)
             sim.run_trajectory(path, n_phases)
+            time.sleep(1)
             # sim.reset()
 
 
