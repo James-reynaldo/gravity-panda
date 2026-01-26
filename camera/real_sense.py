@@ -32,6 +32,13 @@ class RealSense():
         self.profile = None
         self.serial = None
         self.is_grabbing = False
+
+        # Initialize camera parameter with default values
+        self.K = np.array([[1.0, 0,  1.0],
+                    [0,  1.0, 1.0],
+                    [0,  0,  1.0]]) 
+        self.coordinates = np.array([0.0, 0.0, 0.0])
+        self.rotation = np.eye(3)
         
     def connect(self, serial=None):
         print("[RealSense] Connecting device...")
@@ -67,7 +74,7 @@ class RealSense():
 
         return None, None
 
-    def acquire_rgb_and_depth(self):
+    def get_rgb_and_depth(self):
         color_frame, depth_frame = self.acquire_images()
         rgb = np.asanyarray(color_frame.get_data())
         depth = np.asanyarray(depth_frame.get_data())  

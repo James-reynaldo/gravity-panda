@@ -4,7 +4,7 @@ import robotic as ry
 from typing import Union, List, Any
 
 class SimWrapper:
-    def __init__(self, C: ry.Config, sim_tau: float = 5e-2, display_delay: float = 1e-1, verbose: int = 2):
+    def __init__(self, C: ry.Config, sim_tau: float = 3e-2, display_delay: float = 1e-1, verbose: int = 2):
         """
         Wrapper for the simulation class in robotic.
 

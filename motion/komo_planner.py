@@ -9,10 +9,10 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     table = C.getFrame("table")
     table_height = table.getSize()[2] * .5
     cup = C.getFrame("cup")
-    tol_gripper = 0.1
-    cup_size = cup.getSize()[0] + tol_gripper
+    tol_fingertip = 0.1
+    cup_size = cup.getSize()[0] + tol_fingertip
 
-    target_height = table_height + 0.7                                                  # 0.8 is more safe
+    target_height = table_height + 0.7                                                # 0.8 is more safe
     target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
 
     # Chose end_effector
@@ -25,9 +25,10 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     # Setup komo
     komo = ry.KOMO()
     komo.setConfig(C, True)
-    komo.setTiming(phases=n_phases, slicesPerPhase=12, durationPerPhase=1,kOrder=1)
+    komo.setTiming(phases=n_phases, slicesPerPhase=8, durationPerPhase=0.4,kOrder=1)
   
     # Constrains on system
+    # komo.addControlObjective([], 2, 1e-2)
     komo.addControlObjective([], 1, 1e0)                                                # Penalize velocity
     komo.addControlObjective([], 0, 1e-1)                                               # Penalize joint motion magnitude
     komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq, [1e1])                     # Do not exceed robots joint limits
@@ -42,7 +43,7 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
 
     return komo
 
-def get_path_from_komo(komo:ry.KOMO=None, view= False):
+def get_path_from_komo(komo=None, display:bool=False):
     sol = ry.NLP_Solver()
     sol.setProblem(komo.nlp())
     sol.setOptions(damping=1e-1, verbose=0, stopTolerance=1e-2, stopInners=100, stopEvals=1000)
@@ -57,7 +58,7 @@ def get_path_from_komo(komo:ry.KOMO=None, view= False):
     path = komo.getPath()
 
     # Show planned path
-    if view:
+    if display:
         komo.view_play(False, delay=.1)
     
     return path
