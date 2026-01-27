@@ -14,7 +14,8 @@ from matplotlib.animation import FuncAnimation
 class Camera():
     def __init__(self, C:ry.Config= None ,input:str= None, bot: ry.BotOp= None, 
                  camera_pos:dict= None, display = False, max_frames:int= None, 
-                 display_target = "rgb", kernel_size = (5, 5), min_area = 100) -> None:
+                 display_target = "rgb", kernel_size = (5, 5), min_area = 100,
+                 threshold=0.6, color_lower=[10, 80, 40], color_upper = [30, 255, 255]) -> None:
         self.bot = bot
         self.C = C
         self.input = input
@@ -24,6 +25,9 @@ class Camera():
         self.display_target = display_target # rgb or mask
         self.kernel_size = kernel_size
         self.min_area = min_area
+        self.threshold = threshold
+        self.color_lower = color_lower
+        self.color_upper = color_upper
         
         self.camera_thread = None
         self.ball_position = None
@@ -247,15 +251,14 @@ class Camera():
                     rgb_display = self.draw_detected_circles(rgb, display_circles)
             yield world_coor, mask_blur, rgb_display
 
-    def filter_image(self, rgb, color_lower: np.ndarray = np.array([90, 50, 50]), 
-                            color_upper: np.ndarray = np.array([130, 255, 170]), 
+    def filter_image(self, rgb, 
                             blur_parameter = 5) -> np.ndarray:
         """
         Docstring for filter_image
         """
         # Color Filtering + Blurring
         hsv = cv.cvtColor(rgb, cv.COLOR_RGB2HSV)
-        mask = cv.inRange(hsv, color_lower, color_upper)
+        mask = cv.inRange(hsv, self.color_lower, self.color_upper)
         mask_blur = cv.medianBlur(mask, blur_parameter)
 
         # Seperate touching objects
@@ -298,7 +301,7 @@ class Camera():
             circularity = 4 * np.pi * area / (perimeter * perimeter)
 
             # Ball ≈ circular, screen ≈ not
-            if circularity > 0.4:
+            if circularity > self.threshold:
                 candidates.append(c)
         return candidates
 

@@ -129,7 +129,7 @@ def main(args):
             bot=bot, 
             camera_pos= camera_pos, 
             display=True,
-            display_target="rgb")
+            display_target="mask")
         camera.start()
         is_moving = False
         plan_cooldown = 0.1  # seconds
