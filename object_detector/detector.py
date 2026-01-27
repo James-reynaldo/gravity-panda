@@ -301,7 +301,7 @@ class Camera():
             circularity = 4 * np.pi * area / (perimeter * perimeter)
 
             # Ball ≈ circular, screen ≈ not
-            if circularity > self.threshold:
+            if circularity > 0.4:
                 candidates.append(c)
         return candidates
 

@@ -110,7 +110,7 @@ def main(args):
         path = planner.get_path_from_komo(komo)
 
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
-        bot.moveTo(q_home)
+        # bot.moveTo(q_home)
         # Close gripper
         bot.gripperMove(ry.ArgWord._left, 0.)
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
@@ -118,7 +118,7 @@ def main(args):
         times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
 
 
-        bot.move(path, times)
+        # bot.move(path, times)
         bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
         # thread_camera = threading.Thread(target=do_camera, args=[args, bot, camera_pos, K, camera_rot, camera_coor, ball_position], daemon=True)
@@ -178,7 +178,7 @@ def main(args):
                                     duration = path.shape[-2] / desired_points_per_second  # e.g., 10 points per second
                                     times = np.linspace(0, duration, path.shape[-2])
                                     # times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) #Fixes duration to only 1s
-                                    bot.move(path, times)
+                                    # bot.move(path, times)
                                     
                                     # Update state
                                     is_moving = True
