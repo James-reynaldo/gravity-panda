@@ -18,9 +18,14 @@ from motion import komo_planner as planner
 def gen_scene():
     """Generate robot scene (environment) and return robotic-Config."""
     C = ry.Config()
+    # C.addFile(ry.raiPath("scenarios/pandasTable.g"))
     C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     C.delFrame("panda_collCameraWrist")
     C.addFile("config/config_gp.g")
+
+    world = C.getFrame("world")
+    # show world frame as marker
+    world.setShape(ry.ST.marker, [0.1])
 
     # Attach cup as basic cylinder to robot gripper
     C.addFrame("cup", "l_finger1")
@@ -129,6 +134,7 @@ def main(args):
         is_moving = False
         plan_cooldown = 0.1  # seconds
         last_plan_time = -np.inf
+        desired_points_per_second = 10  # For timing the path execution
         
         try:
             if camera.display:
@@ -169,7 +175,9 @@ def main(args):
                                 path = planner.get_path_from_komo(komo)
                                 if path is not None:
                                     # # Run reference path
-                                    times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) #Fixes duration to only 1s
+                                    duration = path.shape[-2] / desired_points_per_second  # e.g., 10 points per second
+                                    times = np.linspace(0, duration, path.shape[-2])
+                                    # times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) #Fixes duration to only 1s
                                     bot.move(path, times)
                                     
                                     # Update state
