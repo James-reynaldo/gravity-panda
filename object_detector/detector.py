@@ -258,7 +258,7 @@ class Camera():
         """
         # Color Filtering + Blurring
         hsv = cv.cvtColor(rgb, cv.COLOR_RGB2HSV)
-        mask = cv.inRange(hsv, self.color_lower, self.color_upper)
+        mask = cv.inRange(hsv, np.array(self.color_lower), np.array(self.color_upper))
         mask_blur = cv.medianBlur(mask, blur_parameter)
 
         # Seperate touching objects
