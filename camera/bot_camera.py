@@ -47,6 +47,7 @@ class RobotCamera():
     def grab_once(self):
         rgb, depth, _ = self.bot.getImageDepthPcl(self.camera_used)
         rgb = cv.cvtColor(rgb, cv.COLOR_BGR2RGB)
+        rgb = cv.rotate(rgb, cv.ROTATE_180)
         return rgb, depth
 
     def get_rgb_and_depth(self):

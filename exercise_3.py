@@ -5,6 +5,10 @@ import robotic as ry
 import matplotlib.pyplot as plt
 from typing import Union, List, Any
 
+import sys
+from pathlib import Path
+
+
 # ===== Own packages =====
 from simulation.sim_wrapper import SimWrapper
 
@@ -13,7 +17,7 @@ def gen_scene():
     C = ry.Config()
     C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
     C.delFrame("panda_collCameraWrist")
-    C.addFile("../config/config_scene_3.g")
+    C.addFile("./config/config_scene_3.g")
     
     return C
 

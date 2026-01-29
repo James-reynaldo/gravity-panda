@@ -45,11 +45,11 @@ class BallDetector():
             ball=  self.process_results(results)
             if self.display:
                 self.show_result(frame, ball)
-                # self.get_world_from_camera(ball, depth_frame)
                 if cv.waitKey(1) & 0xFF == 27:
                     break
-            K, dist, W, H = self.camera.get_color_intrinsics()
-            detect_aruco_markers(frame, K, dist, W, H)
+            
+            # K, dist, W, H = self.camera.get_color_intrinsics()
+            # detect_aruco_markers(frame, K, dist, W, H)
             
             with self._lock:
                 if ball:

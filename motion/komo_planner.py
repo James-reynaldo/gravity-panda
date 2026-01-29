@@ -4,22 +4,12 @@ import numpy as np
 from typing import List
 import time
 
-def setup_komo(C: ry.Config, n_phases, ball_position):
-# Compute push parameters
-    table = C.getFrame("table")
-    table_height = table.getSize()[2] * .5
-    cup = C.getFrame("cup")
-    tol_fingertip = 0.1
-    cup_size = cup.getSize()[0] + tol_fingertip
-
-    target_height = table_height + 0.7                                                # 0.8 is more safe
-    target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
-
+def setup_komo(C: ry.Config, n_phases):
     # Chose end_effector
     end_effector = "l_gripper"
     # end_effector = "cup"
 
-    C.addFrame('target'). setShape(ry.ST.marker, [.1]) .setPosition(target_position)
+    C.addFrame('target') # set new target with function 'replan'
     C.addFrame('world_frame').setShape(ry.ST.marker, [.1]).setPosition(C.getFrame('world').getPosition())
 
     # Setup komo
@@ -62,3 +52,15 @@ def get_path_from_komo(komo=None, display:bool=False):
         komo.view_play(False, delay=.1)
     
     return path
+
+def replan(C, ball_position):
+    # Compute push parameters
+    table = C.getFrame("table")
+    table_height = table.getSize()[2] * .5
+    cup = C.getFrame("cup")
+    tol_fingertip = 0.1
+    cup_size = cup.getSize()[0] + tol_fingertip
+
+    target_height = table_height + .9                                               # 0.8 is more safe
+    target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
+    C.getFrame('target').setShape(ry.ST.marker, [.1]) .setPosition(target_position)

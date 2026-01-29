@@ -1,6 +1,7 @@
-
+## [0.29, 1.42, 2.2, 0.0, 0.0, 0.94, -0.342]
+## [0.0, 3, 1.2, 0.0, 0.0, 0.707, -0.707]
 cameraTopMiddle(world): { 
-    pose: [0.0, 3, 1.2, 0.0, 0.0, 0.707, -0.707], 
+    pose: [0.29, 1.42, 2.2, 0.0, 0.0, 0.94, -0.342], 
     shape: marker, 
     size: [0.1], 
     focalLength: 0.895, 
@@ -10,18 +11,10 @@ cameraTopMiddle(world): {
 }
 
 ball: { 
-    pose: [-.4, 0.2, 2], 
+    pose: [-.02, 0.3, 2], 
     shape: sphere, 
     size: [0.0315], 
     color: [0, 0.33, 0.66],
      contact: 0, 
      mass: 0.01 
-}
-
-
-
-q_home: { 
-    pose: [0., 0.2, 1.0], 
-    shape: marker, 
-    size: [0.1]
 }

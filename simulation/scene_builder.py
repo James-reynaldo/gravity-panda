@@ -43,6 +43,7 @@ class SceneBuilder():
         # Build robot environment
         self.C.addFile(self.scenario)
         self.C.delFrame("panda_collCameraWrist")
+        self.C.addFrame('world_marker'). setShape(ry.ST.marker, [.1]) .setPosition(self.C.getFrame('world').getPosition())
         # Add objects and camera from config
         self.C.addFile(self.scene_config)
 
