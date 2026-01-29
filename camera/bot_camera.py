@@ -2,7 +2,7 @@ import robotic as ry
 import threading
 import numpy as np
 import cv2 as cv
-
+import os
 class RobotCamera():
     def __init__(self, ry_Config:ry.Config,  robot:ry.BotOp, input_camera:str) -> None:
         self.C = ry_Config
@@ -51,12 +51,15 @@ class RobotCamera():
         """Show camera view. Also, this is a small example of how to get the camera frame."""
         if display is not None:
             self.display = display
+
         for (rgb, depth) in self.get_rgb_and_depth():
             if self.display:
                 cv.imshow("RobotCamera Feed", rgb)
                 if cv.waitKey(10) & 0xFF == 27:
                     print("Exiting program...")
                     return
+
+
 
     def open(self, display:bool = False):
         self.set_parameters()
@@ -66,6 +69,17 @@ class RobotCamera():
     def close(self):
         self._stop_event.set()
         cv.destroyAllWindows()
+
+
+    def save_frame_to_jpg(self, frame, filename, output_dir="/tmp/frames"):
+        os.makedirs(output_dir, exist_ok=True)
+        file_path = os.path.join(output_dir, filename)
+
+        success = cv.imwrite(file_path, frame, [cv.IMWRITE_JPEG_QUALITY, 90])
+        if not success:
+            raise IOError(f"Failed to write image to {file_path}")
+
+        return file_path
 
 
 

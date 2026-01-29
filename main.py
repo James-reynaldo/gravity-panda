@@ -14,7 +14,6 @@ from simulation.sim_wrapper import SimWrapper
 from motion import komo_planner as planner
 
 
-
 def gen_scene():
     """Generate robot scene (environment) and return robotic-Config."""
     C = ry.Config()

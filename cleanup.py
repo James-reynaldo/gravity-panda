@@ -2,6 +2,7 @@ import time
 import argparse
 import numpy as np
 import robotic as ry
+import threading
 
 # ===== Own packages =====
 from camera.real_sense import RealSense
@@ -27,8 +28,12 @@ def main(args):
     )  
 
     # ===== Build simulation environment =====
+    # C = SceneBuilder(ry.raiPath("scenarios/pandasTable.g"), "./config/config_gp.g").build()
 
-    C = SceneBuilder(ry.raiPath("scenarios/pandasTable.g"), "./config/config_gp.g").build()
+    C = ry.Config()
+    C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
+    # C.delFrame("panda_collCameraWrist")
+    C.addFile("config/config_gp.g")
     if C is None:
         return
     bot = ry.BotOp(C=C, useRealRobot=args.real)
@@ -44,9 +49,21 @@ def main(args):
         camera = RobotCamera(C, bot, args.input)
         camera.open(display=args.display)
 
-    detector = BallDetector(camera=camera, display=args.display)
 
-    detector.run()
+    # camera.run()
+    # exit(0)
+
+    detector = BallDetector(camera=camera, display=args.display)
+    camera.run()
+    # d_thread = threading.Thread(target=detector.run, daemon=True)
+    # d_thread.start()
+
+    # while True:
+    #     time.sleep(0.1)
+    #     with detector._lock:
+    #         ball_position = detector.current_ball_coor
+    #     print(ball_position)
+
     exit(0)
 
     # ===== Setup ball =====
