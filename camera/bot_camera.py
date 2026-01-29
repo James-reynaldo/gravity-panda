@@ -37,6 +37,13 @@ class RobotCamera():
             self.coordinates = self.C.getFrame(self.camera_used).getPosition()
             self.rotation = self.C.getFrame(self.camera_used).getRotationMatrix()
             
+
+    def get_color_intrinsics(self):
+        W = 1280
+        H = 720
+        dist = np.zeros(5)
+        return self.K, dist, W, H
+    
     def grab_once(self):
         rgb, depth, _ = self.bot.getImageDepthPcl(self.camera_used)
         rgb = cv.cvtColor(rgb, cv.COLOR_BGR2RGB)

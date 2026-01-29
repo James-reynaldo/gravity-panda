@@ -28,12 +28,13 @@ def main(args):
     )  
 
     # ===== Build simulation environment =====
-    # C = SceneBuilder(ry.raiPath("scenarios/pandasTable.g"), "./config/config_gp.g").build()
+    C = SceneBuilder(ry.raiPath("scenarios/pandasTable.g"), "./config/config_gp.g").build()
 
-    C = ry.Config()
-    C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
-    # C.delFrame("panda_collCameraWrist")
-    C.addFile("config/config_gp.g")
+    # C = ry.Config()
+    # C.addFile(ry.raiPath("scenarios/pandaSingle.g"))
+    # # C.delFrame("panda_collCameraWrist")
+    # C.addFile("config/config_gp.g")
+
     if C is None:
         return
     bot = ry.BotOp(C=C, useRealRobot=args.real)
@@ -53,21 +54,14 @@ def main(args):
     # camera.run()
     # exit(0)
 
-    detector = BallDetector(camera=camera, display=args.display)
-    camera.run()
-    # d_thread = threading.Thread(target=detector.run, daemon=True)
-    # d_thread.start()
+    # detector = BallDetector(camera=camera, display=args.display)
+    # detector.run()
 
-    # while True:
-    #     time.sleep(0.1)
-    #     with detector._lock:
-    #         ball_position = detector.current_ball_coor
-    #     print(ball_position)
 
-    exit(0)
+    # exit(0)
 
-    # ===== Setup ball =====
-    test_ball_positions = [[-.8, 0.2, 2], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
+    # ===== Setup ball ===== 
+    test_ball_positions = [[-.4, 0.3, 2], [-0.5, 0.4, 1.4], [0.4, 0.2, 1.2], [0.6, 0.2, 1], [-0.3, 0.0, 0.8]]
 
     if  args.botop:
         q_home = C.getJointState()
@@ -85,10 +79,11 @@ def main(args):
         # ===== Compute Robot Path =====
         n_phases = 1
         ball_position = test_ball_positions[i]
-        # ball = C.getFrame("ball")
-        # ball.setPosition(ball_position)
+        ball = C.getFrame("ball")
+        ball.setPosition(ball_position)
         komo = planner.setup_komo(C, n_phases, ball_position)
-        path = planner.get_path_from_komo(komo, args.display)
+        path = planner.get_path_from_komo(komo, True)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
         if path is None:
             continue
 
@@ -96,7 +91,7 @@ def main(args):
         if  args.botop:
             times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
             bot.move(path, times)
-            bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
+            bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
 
         else:
             sim = SimWrapper(C, display_delay=0.1)

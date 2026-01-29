@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
 import robotic as ry
 import threading
+from object_detector.aruco_detector import detect_aruco_markers
 
 @dataclass
 class Component:
@@ -37,11 +38,6 @@ class BallDetector():
         self._lock = threading.Lock()
 
 
-
-
- 
-    
-
     def run(self):
         for (frame, depth_frame) in self.camera.get_rgb_and_depth():
             # YOLO prediction
@@ -52,6 +48,8 @@ class BallDetector():
                 # self.get_world_from_camera(ball, depth_frame)
                 if cv.waitKey(1) & 0xFF == 27:
                     break
+            K, dist, W, H = self.camera.get_color_intrinsics()
+            detect_aruco_markers(frame, K, dist, W, H)
             
             with self._lock:
                 if ball:
@@ -134,35 +132,6 @@ class BallDetector():
         vec[3:] = quat
         return vec  
 
-    def get_real_world(self, ball:Component, depth_frame: np.ndarray) -> Optional[np.ndarray]:
-
-        x1, y1, x2, y2 = ball.bbox
-        image_points = np.array([
-            [x1, y1],  # top-left
-            [x2, y1],  # top-right
-            [x2, y2],  # bottom-right
-            [x1, y2]   # bottom-left
-        ], dtype=np.float32)
-        x_length = ball.bbox[2] - ball.bbox[0]
-        y_length = ball.bbox[3] - ball.bbox[1]
-        object_points = np.array([
-            [-x_length/2,  y_length/2, 0],
-            [ x_length/2,  y_length/2, 0],
-            [ x_length/2, -y_length/2, 0],
-            [-x_length/2, -y_length/2, 0]
-        ], dtype=np.float32)
-
-        T_world2cam = np.array([[-1, 0, 0, 0],[0, 1, 0, 0.45],[0, 0, -1, 2.30],[0, 0, 0, 1]]) 
-        T_flipY = np.diag([1, -1, 1, 1])
-        dist = np.zeros(5)
-        _, rvec, tvec = cv.solvePnP(objectPoints=object_points, imagePoints=image_points, cameraMatrix=self.K, distCoeffs=dist)
-        T_c_m = self.rvec_tvec_to_T(rvec, tvec)
-        T_c_m_flip = T_flipY @ T_c_m
-        T_w_m  = T_world2cam @ T_c_m_flip
-        pose = self.matrix2vector(T_w_m)
-
-        print(pose)
-
     def get_world_from_camera(self, ball:Component, depth: np.ndarray,
                             K: np.ndarray, camera_rot: np.ndarray, 
                             camera_coor: np.ndarray) -> np.ndarray:
@@ -184,7 +153,5 @@ class BallDetector():
         print("Ball world coordinates: ", ball_world_coor)
 
         return ball_world_coor
-        
-
-        
+    
 

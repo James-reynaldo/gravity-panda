@@ -34,3 +34,12 @@ cup_wall: {
     contact: 1,
     rel: [0, 0, 0, 1, 0, 0, 0]
 }
+
+
+shoeboxObstacle(world): {
+  pose: [-0.8, 0.0, 1, 0.7071, 0, 0, 0.7071],
+  shape: box,
+  size: [0.15, 0.10, 0.06],
+  color: [0.6, 0.3, 0.1],
+  contact: 1
+}
