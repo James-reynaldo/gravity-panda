@@ -42,7 +42,7 @@ class BallDetector():
         for (frame, depth_frame) in self.camera.get_rgb_and_depth():
             # YOLO prediction
             results = self.predict_frame(frame, confidence=0.3)
-            ball=  self.process_results(results)
+            ball =  self.process_results(results)
             if self.display:
                 self.show_result(frame, ball)
                 if cv.waitKey(1) & 0xFF == 27:
@@ -59,17 +59,6 @@ class BallDetector():
                     
         cv.destroyAllWindows()
                 
-        # TODO: Detect ball in frame
-            ## preprocess frame
-            ## look for circles with opencv
-            ## select circle
-
-        # TODO: Get Ball center pixel coordinates
-
-        # TODO: Calculate real world coordinates of ball
-
-        # TODO: Return ball real world coordinates to robot
-
 
 
     def predict_frame(self, frame, confidence):
@@ -84,7 +73,7 @@ class BallDetector():
             print(f"YOLO prediction error: {e}")
             return None
 
-    def process_results(self, results) -> List[Component]:
+    def process_results(self, results) -> Optional[Component]:
         """Process results from YOLO prediction."""
         if results is None:
             return None
@@ -134,7 +123,7 @@ class BallDetector():
 
     def get_world_from_camera(self, ball:Component, depth: np.ndarray,
                             K: np.ndarray, camera_rot: np.ndarray, 
-                            camera_coor: np.ndarray) -> np.ndarray:
+                            camera_coor: np.ndarray) -> Optional[np.ndarray]:
 
         # Placeholder for actual implementation
         u = int(ball.center[0])
