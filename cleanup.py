@@ -47,7 +47,7 @@ def main(args):
 
     else:
         camera = RobotCamera(C, bot, args.input)
-        camera.open(display=args.display)
+        camera.open(display=args.display, rotate=args.rotate)
 
     detector = BallDetector(camera=camera, display=args.display)
 
@@ -121,7 +121,8 @@ if __name__ == "__main__":
     p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
     p.add_argument("--display", action="store_true", default=False, help="Show camera view")
     p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
-    p.add_argument("--detectonly", action="store_true", default=False, help="Run instance segmentation to locate an object")
+    p.add_argument("--detectonly", action="store_true", default=False, help="")
+    p.add_argument("--rotate", action="store_true", default=False, help="")
 
     args = p.parse_args()
 

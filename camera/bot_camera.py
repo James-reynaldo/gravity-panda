@@ -10,6 +10,7 @@ class RobotCamera():
         self.camera_pos = {"top": "cameraTopMiddle", "wrist": "cameraWrist"}
         self.camera_used = None
         self.display = False
+        self.rotate = False
 
         try:
             self.camera_used = self.camera_pos[input_camera]  
@@ -47,7 +48,8 @@ class RobotCamera():
     def grab_once(self):
         rgb, depth, _ = self.bot.getImageDepthPcl(self.camera_used)
         rgb = cv.cvtColor(rgb, cv.COLOR_BGR2RGB)
-        rgb = cv.rotate(rgb, cv.ROTATE_180)
+        if self.rotate:
+            rgb = cv.rotate(rgb, cv.ROTATE_180)
         return rgb, depth
 
     def get_rgb_and_depth(self):
@@ -69,9 +71,10 @@ class RobotCamera():
 
 
 
-    def open(self, display:bool = False):
+    def open(self, display:bool = False, rotate:bool = False):
         self.set_parameters()
         self.display = display
+        self.rotate = rotate
             
 
     def close(self):
