@@ -1,5 +1,7 @@
 import pyrealsense2 as rs
 import numpy as np
+import matplotlib.pyplot as plt
+import cv2
 
 class DetectedObject():
     def __init__(self, name :str=None, bbox :np.ndarray=np.array([None, None, None, None])):
@@ -40,7 +42,7 @@ class RealSense():
         self.coordinates = np.array([0.0, 0.0, 0.0])
         self.rotation = np.eye(3)
         
-    def connect(self, serial=None):
+    def connect(self, serial="819312071273"):
         print("[RealSense] Connecting device...")
         self.pipeline = rs.pipeline()
         self.config = rs.config()
@@ -106,3 +108,127 @@ class RealSense():
     def close(self):
         self.pipeline.stop()
     
+
+    
+
+    def plot_rgb_depth_with_boxes(self, rgb_image,
+                                depth_image,
+                                rgb_bboxes=None,
+                                depth_bboxes=None,
+                                figsize=(12, 8)):
+        """
+        Plots four subplots:
+        1. Top-left: RGB image
+        2. Top-right: RGB image with bounding boxes (None → no boxes)
+        3. Bottom-left: Depth image
+        4. Bottom-right: Depth image with bounding boxes (None → no boxes)
+
+        Parameters
+        ----------
+        rgb_image : np.ndarray
+            RGB image (H, W, 3)
+        depth_image : np.ndarray
+            Depth image (H, W)
+        rgb_bboxes : list of tuples or None
+            Each bbox as (x1, y1, x2, y2). None → no boxes.
+        depth_bboxes : list of tuples or None
+            Same format as rgb_bboxes.
+        figsize : tuple
+            Figure size.
+        """
+
+        fig, axes = plt.subplots(2, 2, figsize=figsize)
+
+        # --- 1. RGB image ---
+        axes[0, 0].imshow(rgb_image)
+        axes[0, 0].set_title("RGB Image")
+        axes[0, 0].axis("off")
+
+        # --- 2. RGB image with bounding boxes ---
+        axes[0, 1].imshow(rgb_image)
+        axes[0, 1].set_title("RGB + Boxes")
+        axes[0, 1].axis("off")
+
+        if rgb_bboxes is not None:
+            for (x1, y1, x2, y2) in rgb_bboxes:
+                rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1,
+                                    fill=False, edgecolor='green', linewidth=2)
+                axes[0, 1].add_patch(rect)
+
+        # --- 3. Depth image ---
+        axes[1, 0].imshow(depth_image, cmap='gray')
+        axes[1, 0].set_title("Depth Image")
+        axes[1, 0].axis("off")
+
+        # --- 4. Depth image with bounding boxes ---
+        axes[1, 1].imshow(depth_image, cmap='gray')
+        axes[1, 1].set_title("Depth + Boxes")
+        axes[1, 1].axis("off")
+
+        if depth_bboxes is not None:
+            for (x1, y1, x2, y2) in depth_bboxes:
+                rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1,
+                                    fill=False, edgecolor='yellow', linewidth=2)
+                axes[1, 1].add_patch(rect)
+
+        plt.tight_layout()
+        plt.show()
+
+    def show_grab_results(self, depth_gray:bool = False, depth_color:bool = False):    
+        """Showing the RGB frames of the current frame grap. To show the depth frame: set depth flags to show in gray scale or with color map."""
+        while True:
+            rgb,depth = self.get_rgb_and_depth()
+            self.show_rgb_frame(rgb)
+            if depth_gray:
+                self.show_depth_gray(depth)
+            if depth_color:
+                self.show_depth_colormap(depth)
+
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
+
+            
+
+    def show_rgb_frame(self, rgb_frame):
+        cv2.imshow("RealSense RGB", rgb_frame)
+
+    def show_depth_gray(self, depth_frame):
+        """
+        depth_frame: 16-bit depth image from Intel RealSense
+        """
+        # Normalize depth to 0–255
+        depth_norm = cv2.normalize(depth_frame, None, 0, 255, cv2.NORM_MINMAX)
+        depth_norm = depth_norm.astype(np.uint8)
+
+        cv2.imshow("RealSense Depth (Gray)", depth_norm)
+
+
+    def show_depth_colormap(self, depth_frame):
+        """
+        depth_frame: 16-bit depth image from Intel RealSense
+        """
+        # Normalize depth to 0–255
+        depth_norm = cv2.normalize(depth_frame, None, 0, 255, cv2.NORM_MINMAX)
+        depth_norm = depth_norm.astype(np.uint8)
+
+        # Apply a colormap (JET is common for depth)
+        depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
+
+        cv2.imshow("RealSense Depth (Colormap)", depth_color)
+
+
+def main():
+    """Example how to show the grabbed frame of the RealSense."""
+    print("Starting RealSense.")
+    camera = RealSense()
+    camera.connect()
+    camera.start_grabbing()
+
+    print("Showing frames:")
+    camera.show_grab_results(depth_color=True)
+
+    camera.close()
+    print("Program exited cleanly.")
+
+if __name__ == "__main__":
+    main()

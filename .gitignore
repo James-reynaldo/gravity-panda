@@ -5,6 +5,5 @@
 
 **/z.log.global
 **/uv.lock
-**/pyproject.toml
 
 **/__pycache__
