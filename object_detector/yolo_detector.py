@@ -90,6 +90,7 @@ class BallDetector():
     def show_result(self, frame, ball= None):
         if ball is not None:
             x1, y1, x2, y2 = map(int, ball.bbox)
+            cv.circle(frame, (320, 180), 4, (0, 0, 255), -1)
             cv.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv.putText(frame, f"{ball.name} {ball.confidence:.2f}",
                         (x1, y1 - 10),
@@ -135,8 +136,11 @@ class BallDetector():
         if z == 0:
             print("Depth is zero at the circle center; cannot compute world coordinates.")
             return None
+        print(f"depth shape = {depth.shape}")
+        print(f"u:{u} v:{v} z:{z}")
         x = (u - K[0,2]) * z / K[0,0] # x = (u - cx) * cam_depth / fx
         y = (v - K[1,2]) * z / K[1,1] # y = (v - cy) * cam_depth / fy
+        print(f"x:{x} y:{y} z:{z}")
         ball_cam_coor = np.array([x, y, z])
         ball_world_coor = camera_rot @ ball_cam_coor + camera_coor
         print("Ball world coordinates: ", ball_world_coor)
