@@ -94,7 +94,7 @@ class Camera():
             # Initial empty image
             self.img_display = self.ax.imshow(np.zeros((480, 640, 3), dtype=np.uint8))
             
-            # Use matplotlib's animation for smooth updates
+            # Matplotlib's animation for smooth updates
             self.anim = FuncAnimation(self.fig, self.update_plot, interval=50, blit=False, cache_frame_data=False)
 
     def detector_loop(self, ball_position):
@@ -278,7 +278,7 @@ class Camera():
         
         return circles
 
-    def find_circl_by_contours(self, mask: np.ndarray) -> list:
+    def find_circle_by_contours(self, mask: np.ndarray) -> list:
         """
         Docstring for find_circl_contours
         """
@@ -384,7 +384,7 @@ class Camera():
                     depth = None # Placeholder depth
                     yield frame_id, rgb, depth
 
-def circl_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 100,
+def circle_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 100,
                             param1: float = 100, param2: float = 20,
                             minRadius: int = 30, maxRadius: int = 500) -> np.ndarray:
         """
@@ -394,6 +394,7 @@ def circl_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 1
                                 param1=param1, param2=param2,
                                 minRadius=minRadius, maxRadius=maxRadius)
         return circles
+
 def main():
     # for entry in os.scandir("./object_detector/images"):
     #     if entry.name.endswith(".jpg") or entry.name.endswith(".png"):
@@ -499,7 +500,6 @@ def main():
     camera.start()
     try:
         if camera.display:
-            # Matplotlib will handle updates via animation
             plt.show(block=True)  # This blocks until window is closed
         else:
             # If not displaying, just keep running
