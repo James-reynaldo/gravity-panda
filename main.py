@@ -58,11 +58,8 @@ def main(args):
     d_thread = threading.Thread(target=detector.run, daemon=True)
     d_thread.start()
 
-
-    
-
     # ===== Setup ball ===== 
-    test_ball_positions = [[-0.139, -0.166, 1.5]] # , [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
+    # test_ball_positions = [[-0.139, -0.166, 1.5], [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
 
     if  args.botop:
         print("Moving home.")
@@ -86,11 +83,6 @@ def main(args):
             continue
 
         # ===== Compute Robot Path =====
-        
-        # ball_position = test_ball_positions[i]
-        # ball = C.getFrame("ball")
-        # ball.setPosition(ball_position)
-        
         ball_position = [ball_position[0], ball_position[1], ball_position[2], 0, 0, 0]
         planner.replan(C, ball_position)
         path = planner.get_path_from_komo(komo, True)
