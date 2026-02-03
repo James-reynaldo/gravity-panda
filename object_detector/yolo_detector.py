@@ -23,7 +23,7 @@ class Component:
 
 
 class BallDetector():
-    def __init__(self, camera, modelpath="./yolo/best.pt", display=False) -> None:
+    def __init__(self, camera, modelpath="./yolo/ball_with_aruco_n.pt", display=False) -> None:
         # --- Setup camera ---
         self.camera = camera
         self.K = camera.K
@@ -34,7 +34,8 @@ class BallDetector():
         self.display = display
         self.model = YOLO(modelpath)
         self.current_ball_coor = None
-    
+
+        
         self._lock = threading.Lock()
 
 
@@ -74,7 +75,7 @@ class BallDetector():
             return None
 
     def process_results(self, results) -> Optional[Component]:
-        """Process results from YOLO prediction."""
+        """Process results from YOLO prediction. Retruns ball as Component"""
         if results is None:
             return None
 

@@ -12,6 +12,7 @@ class RobotCamera():
         self.display = False
         self.rotate = False
 
+
         try:
             self.camera_used = self.camera_pos[input_camera]  
         except:

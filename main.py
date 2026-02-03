@@ -55,11 +55,11 @@ def main(args):
         detector.run()
         exit(0)
 
-    d_thread = threading.Thread(target=detector.run, daemon=True)
-    d_thread.start()
+    # d_thread = threading.Thread(target=detector.run, daemon=True)
+    # d_thread.start()
 
     # ===== Setup ball ===== 
-    # test_ball_positions = [[-0.139, -0.166, 1.5], [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
+    test_ball_positions = [[-0.139, -0.166, 1.5], [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
 
     if  args.botop:
         print("Moving home.")
@@ -69,24 +69,32 @@ def main(args):
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
 
     n_phases = 1
-    komo = planner.setup_komo(C, n_phases)
+    # komo = planner.setup_komo(C, n_phases)
     # ===== MAIN LOOP =====
     print("Start loop...")
-    while True:
+    # while True:
         
-        with detector._lock:
-            ball_position = detector.current_ball_coor
-        print(ball_position)
+        # rgb, depth = camera.grab_once()
+        # results = detector.predict_frame(frame=rgb, confidence=0.4)
+        # ball = detector.process_results(results)
+        # if ball is None:
+        #     print("No ball detected.")
+        #     continue
+        # ball_position = detector.get_world_from_camera(ball, depth, camera.K, camera.rotation, camera.coordinates)
+        # print(ball_position)
+
+    for ball_position in test_ball_positions:
 
         if ball_position is None:
+            print("No ball position.")
             time.sleep(0.1)
             continue
 
         # ===== Compute Robot Path =====
         ball_position = [ball_position[0], ball_position[1], ball_position[2], 0, 0, 0]
-        planner.replan(C, ball_position)
+        komo = planner.setup_komo(C, 1, ball_position)
         path = planner.get_path_from_komo(komo, True)
-        # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
         if path is None:
             continue
 
