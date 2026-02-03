@@ -42,8 +42,7 @@ class Camera():
         self.result_queue = queue.Queue()
         self.running = False
 
-        
-        # Matplotlib figure (created once in main thread)
+        # Matplotlib figure
         self.fig = None
         self.ax = None
         self.anim = None
@@ -203,8 +202,8 @@ class Camera():
             Tuple of (best_ball_world_coor, best_circle, mask_blur)
         """
         mask_blur = self.filter_image(rgb)
-        # circles = self.circl_hough_transform(mask_blur)
-        candidates = self.find_circl_by_contours(mask_blur.copy())
+        # circles = self.circle_hough_transform(mask_blur)
+        candidates = self.find_circle_by_contours(mask_blur.copy())
         if not candidates:
             print("NO BALL candidates found.")
             return None, None, mask_blur
@@ -266,11 +265,11 @@ class Camera():
         mask_sep = cv.morphologyEx(mask_blur, cv.MORPH_OPEN, kernel)
         return mask_sep
 
-    def circl_hough_transform(self, mask: np.ndarray, dp: float = 1, minDist: float = 100,
+    def circle_hough_transform(self, mask: np.ndarray, dp: float = 1, minDist: float = 100,
                             param1: float = 100, param2: float = 15,
                             minRadius: int = 5, maxRadius: int = 100) -> np.ndarray:
         """
-        Docstring for circl_hough_transform
+        Docstring for circle_hough_transform
         """
         circles = cv.HoughCircles(mask, cv.HOUGH_GRADIENT, dp, minDist,
                                 param1=param1, param2=param2,
@@ -336,7 +335,6 @@ class Camera():
         Returns:
             World coordinates of the circle center (3,) or None if depth is 0
         """
-        # Placeholder for actual implementation
         u,v = circle[0], circle[1]
         if depth is not None:
             z = depth[v,u] # Convert mm to meters
@@ -388,7 +386,7 @@ def circle_hough_transform( mask: np.ndarray, dp: float = 1.2, minDist: float = 
                             param1: float = 100, param2: float = 20,
                             minRadius: int = 30, maxRadius: int = 500) -> np.ndarray:
         """
-        Docstring for circl_hough_transform
+        Docstring for circle_hough_transform
         """
         circles = cv.HoughCircles(mask, cv.HOUGH_GRADIENT, dp, minDist,
                                 param1=param1, param2=param2,
@@ -419,7 +417,7 @@ def main():
     #         rgb_display2 = rgb.copy()
     #         mask_blur = cv.medianBlur(blue_mask, 5)
 
-    #         # circles = circl_hough_transform(mask_blur)
+    #         # circles = circle_hough_transform(mask_blur)
 
     #         # --- SEPARATE TOUCHING OBJECTS (Solution 1) ---
     #         kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (30, 30))
