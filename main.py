@@ -72,18 +72,18 @@ def main(args):
     # komo = planner.setup_komo(C, n_phases)
     # ===== MAIN LOOP =====
     print("Start loop...")
-    # while True:
+    while True:
         
-        # rgb, depth = camera.grab_once()
-        # results = detector.predict_frame(frame=rgb, confidence=0.4)
-        # ball = detector.process_results(results)
-        # if ball is None:
-        #     print("No ball detected.")
-        #     continue
-        # ball_position = detector.get_world_from_camera(ball, depth, camera.K, camera.rotation, camera.coordinates)
-        # print(ball_position)
+        rgb, depth = camera.grab_once()
+        results = detector.predict_frame(frame=rgb, confidence=0.4)
+        ball = detector.process_results(results)
+        if ball is None:
+            print("No ball detected.")
+            continue
+        ball_position = detector.get_world_from_camera(ball, depth, camera.K, camera.rotation, camera.coordinates)
+        print(ball_position)
 
-    for ball_position in test_ball_positions:
+    # for ball_position in test_ball_positions:
 
         if ball_position is None:
             print("No ball position.")

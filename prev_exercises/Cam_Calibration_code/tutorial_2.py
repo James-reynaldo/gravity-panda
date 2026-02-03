@@ -101,12 +101,14 @@ def matrix2vector(T):
             
 def detect_aruco_markers(rgb, K, dist, W, H):
     dictionary = aruco.getPredefinedDictionary(aruco.DICT_ARUCO_ORIGINAL)
-    params = aruco.DetectorParameters_create()
+    # params = aruco.DetectorParameters_create()
+    params = aruco.DetectorParameters()
 
     out = rgb.copy()
     detection_txt = "Poses (cam):"
     # T_world2cam = np.array([[-1, 0, 0, 0],[0, 1, 0, 0.45],[0, 0, -1, 2.30],[0, 0, 0, 1]])       #world coordinates of the virtual top down camera. Will not work for other inputs!
     T_world2marker30 = np.array([[1, 0, 0, 0],[0, 1, 0, 0.3],[0, 0, 1, 0.65],[0, 0, 0, 1]])         #world coordinates of marker 100
+    T_world2marker625 = np.array([[1, 0, 0, 0],[0, 1, 0, 0.5],[0, 0, 1, 0.65],[0, 0, 0, 1]])         #world coordinates of marker 100
     T_cam2marker100 = np.eye(4)
     marker_length = 0.095  # 0.05 would be standard for academic projects
 
@@ -120,11 +122,13 @@ def detect_aruco_markers(rgb, K, dist, W, H):
     ], dtype=np.float32)
 
     # --- Detect markers using old-style API ---
-    marker_corners, marker_ids, rejected_candidates = aruco.detectMarkers(
-        out,
-        dictionary,
-        parameters=params
-    )
+    # marker_corners, marker_ids, rejected_candidates = aruco.detectMarkers(
+    #     out,
+    #     dictionary,
+    #     parameters=params
+    # )
+    detector = aruco.ArucoDetector(dictionary, params)
+    marker_corners, marker_ids, rejected_candidates = detector.detectMarkers(out)
 
     
     if marker_corners is None or marker_ids is None:
@@ -167,7 +171,7 @@ def detect_aruco_markers(rgb, K, dist, W, H):
     # print("Using 'T_world2cam' to compute marker world coordinates:")
     # print()
     for marker_id, marker_data in marker_dict.items():
-        if marker_id == 30:
+        if marker_id == 625:
             rvec, tvec  = marker_data.get('pnp')
             T_c_m = rvec_tvec_to_T(rvec, tvec)
             T_c_m_flip = T_flipY @ T_c_m
