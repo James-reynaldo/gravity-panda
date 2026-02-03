@@ -13,14 +13,13 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     cup_size = cup.getSize()[0] + tol_fingertip
 
     target_height = table_height + 0.8                                            # 0.8 is more safe
-    target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
+    target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1] - 0.1, target_height])
 
     # Chose end_effector
     end_effector = "l_gripper"
     # end_effector = "cup"
 
-    C.addFrame('target'). setShape(ry.ST.marker, [.1]) .setPosition(target_position)
-    C.addFrame('world_frame').setShape(ry.ST.marker, [.1]).setPosition(C.getFrame('world').getPosition())
+    C.getFrame('target').setPosition(target_position)
 
     # Setup komo
     komo = ry.KOMO()

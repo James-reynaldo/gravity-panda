@@ -72,6 +72,10 @@ def main(args):
     # komo = planner.setup_komo(C, n_phases)
     # ===== MAIN LOOP =====
     print("Start loop...")
+
+    C.addFrame('target').setShape(ry.ST.marker, [.1]) 
+    C.addFrame('world_frame').setShape(ry.ST.marker, [.1]).setPosition(C.getFrame('world').getPosition())
+
     while True:
         
         rgb, depth = camera.grab_once()
@@ -80,6 +84,7 @@ def main(args):
         if ball is None:
             print("No ball detected.")
             continue
+        # detector.show_result(rgb, ball)
         ball_position = detector.get_world_from_camera(ball, depth, camera.K, camera.rotation, camera.coordinates)
         print(ball_position)
 
@@ -94,7 +99,7 @@ def main(args):
         ball_position = [ball_position[0], ball_position[1], ball_position[2], 0, 0, 0]
         komo = planner.setup_komo(C, 1, ball_position)
         path = planner.get_path_from_komo(komo, True)
-        bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
+        # bot.wait(C, forKeyPressed=True, forTimeToEnd=False)
         if path is None:
             continue
 
