@@ -5,7 +5,7 @@ from typing import List
 import time
 
 def setup_komo(C: ry.Config, n_phases, ball_position):
-# Compute push parameters
+    # Compute push parameters
     table = C.getFrame("table")
     table_height = table.getSize()[2] * .5
     cup = C.getFrame("cup")
@@ -15,7 +15,6 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     target_height = table_height + 0.7                                                  # 0.8 is more safe
     target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1], target_height])
 
-    # Chose end_effector
     end_effector = "l_gripper"
     # end_effector = "cup"
 
@@ -33,7 +32,7 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq, [1e1])                     # Do not exceed robots joint limits
     komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)                    # Do not self collide
 
-    # Constraints on end_effector orientation
+    # Constraints on end effector orientation
     komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
     komo.addObjective([1], ry.FS.scalarProductYZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
     komo.addObjective([1], ry.FS.scalarProductXZ, [end_effector, 'world'], ry.OT.eq, [1e1], [0])
@@ -48,7 +47,6 @@ def get_path_from_komo(komo:ry.KOMO=None, view= False):
     sol.setOptions(damping=1e-1, verbose=0, stopTolerance=1e-2, stopInners=100, stopEvals=1000)
     ret = sol.solve(True)
 
-    # Check if solution is feasible
     if not ret.feasible:
         print("Solution is not feasible. Skipping...")
         return None
@@ -56,7 +54,6 @@ def get_path_from_komo(komo:ry.KOMO=None, view= False):
 
     path = komo.getPath()
 
-    # Show planned path
     if view:
         komo.view_play(False, delay=.1)
     
