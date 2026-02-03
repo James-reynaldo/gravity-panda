@@ -59,7 +59,7 @@ def main(args):
     # d_thread.start()
 
     # ===== Setup ball ===== 
-    test_ball_positions = [[-0.139, -0.166, 1.5], [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
+    test_ball_positions = [[-0.139, 0.2, 1.5], [-0.5, 0.4, 1.4], [0.1, 0.2, 1.2], [-0.6, 0.2, 1], [-0.3, 0.4, 0.8]]
 
     if  args.botop:
         print("Moving home.")
@@ -100,7 +100,7 @@ def main(args):
 
         # Execute path with botop or in simulation
         if  args.botop:
-            times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2])
+            times = np.linspace(n_phases / path.shape[0], n_phases, path.shape[-2]) * 2
             bot.move(path, times)
             bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
 
