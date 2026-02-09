@@ -49,15 +49,24 @@ class RealSense():
         if serial:
             self.serial = serial
             self.config.enable_device(self.serial)
+        print("[RealSense] Connected successfully.")
+        
 
     def start_grabbing(self, serial=None, width=1280, height=720, fps=30):
-        self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
-        self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
-        self.profile = self.pipeline.start(self.config)
-        # Set up alignment so depth matches color frame
-        align_to = rs.stream.color
-        align = rs.align(align_to)
-        self.is_grabbing = True
+        print("[RealSense] Start grabbing frames...")
+        try:
+            self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
+            self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
+            self.profile = self.pipeline.start(self.config)
+            # Set up alignment so depth matches color frame
+            align_to = rs.stream.color
+            align = rs.align(align_to)
+            self.is_grabbing = True
+        except Exception as e:
+            print(f"[RealSense] ERROR: Failed to start grabbing: {e}.")
+        print(f"[RealSense] Camera grabbing: {self.is_grabbing}.")
+        
+        
 
     def acquire_images(self, serial=None):
         while True:
@@ -95,17 +104,11 @@ class RealSense():
             coeffs = np.zeros(5, dtype=np.float64)
 
         return K, coeffs, intr.width, intr.height
-    
-    def process_yolo_result(self, results):
-        detection_list = []
-        for result in results:
-                for box in result.boxes:
-                    name = f"{result.names[int(box.cls[0])]}"
-                    bbox = box.xyxy[0]
-                    detection_list.append(DetectedObject(name, bbox))
-        return detection_list
+
     
     def close(self):
+        if not self.is_grabbing:
+            return
         self.pipeline.stop()
     
 
@@ -216,6 +219,11 @@ class RealSense():
 
         cv2.imshow("RealSense Depth (Colormap)", depth_color)
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
 def main():
     """Example how to show the grabbed frame of the RealSense."""
@@ -225,8 +233,10 @@ def main():
     camera.start_grabbing()
 
     print("Showing frames:")
-    camera.show_grab_results(depth_color=True)
-
+    try:
+        camera.show_grab_results(depth_color=True)
+    except:
+        print(f"[RealSense] Failed to get frames.")
     camera.close()
     print("Program exited cleanly.")
 
