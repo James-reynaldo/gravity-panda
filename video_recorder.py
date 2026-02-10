@@ -2,8 +2,11 @@ import cv2
 import os
 import logging
 from pathlib import Path
+from camera.bot_camera import RobotCamera
+import robotic as ry
 
-from real_sense import RealSense
+from camera.real_sense import RealSense
+from simulation.scene_builder import SceneBuilder
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
@@ -55,7 +58,7 @@ class VideoStreamRecorder:
         next_num = max(numbers) + 1 if numbers else 1
         return self.output_dir / f"{self.base_name}_{next_num:03d}.{self.extension}"
     
-    def record(self, host='localhost', port=9999, fps=30.0, codec='mp4v', display=True):
+    def record(self, host='localhost', port=9999, fps=30.0, codec='mp4v', display=True, args = None):
         """
         Record video stream to file.
         
@@ -74,12 +77,12 @@ class VideoStreamRecorder:
         frame_count = 0
         
         try:
-            with RealSense() as camera:
-                camera.connect()
-                camera.start_grabbing()
+            C = SceneBuilder(ry.raiPath("./scenarios/pandaSingle.g"), "./config/config_gp.g").build()
+            bot = ry.BotOp(C=C, useRealRobot=args.real)
+            camera = RobotCamera(C, bot, args.input)
+            camera.open(display=args.display, rotate=args.rotate)
 
-                while True:
-                    frame, _ = camera.get_rgb_and_depth()
+            for frame, _ in camera.get_rgb_and_depth():
                     # Initialize video writer on first frame
                     if writer is None:
                         height, width = frame.shape[:2]
@@ -95,6 +98,9 @@ class VideoStreamRecorder:
                     # Write frame to video file
                     writer.write(frame)
                     frame_count += 1
+
+                    if args.display:
+                        cv2.imshow("RealSense", frame)
                     
                     # Display frame count every 30 frames
                     if frame_count % 30 == 0:
@@ -115,13 +121,13 @@ class VideoStreamRecorder:
                 self.logger.warning("No frames were recorded")
 
 
-def main():
+def main(args):
     """Main function to run the video recorder."""
     # Create recorder instance
     recorder = VideoStreamRecorder(
         output_dir='recordings',
         base_name='video',
-        extension='mp4'
+        extension='mp4',
     )
     
     # Start recording
@@ -131,9 +137,22 @@ def main():
         port=9999,
         fps=30.0,
         codec='mp4v',  # Use 'XVID' for .avi, 'avc1' for H.264
-        display=True
+        display=True,
+        args=args
     )
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--input", type=str, default="top", help="Select camera: wrist, top or standalone")
+    p.add_argument("--botop", action="store_true", default=False, help="Use botop in addition to the simulator for a comparison.")
+    p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
+    p.add_argument("--display", action="store_true", default=False, help="Show camera view")
+    p.add_argument("--rotate", action="store_true", default=False, help="")
+
+    args = p.parse_args()
+
+    main(args)
+
+    print("Program exited cleanly.")
