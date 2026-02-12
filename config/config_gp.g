@@ -12,7 +12,7 @@ cameraTopMiddle(world): {
 }
 
 ball: { 
-    pose: [-.02, 0.3, 2], 
+    pose: [-0.35, 0.25, 2], 
     shape: sphere, 
     size: [0.0315], 
     color: [0, 0.33, 0.66],
@@ -20,10 +20,19 @@ ball: {
      mass: 0.01 
 }
 
-shoeboxObstacle(world): {
-  pose: [-0.8, 0.0, 1, 0.7071, 0, 0, 0.7071],
-  shape: box,
-  size: [0.15, 0.10, 0.06],
-  color: [0.6, 0.3, 0.1],
-  contact: 1
+##shoeboxObstacle(world): {
+##  pose: [-0.8, 0.0, 1, 0.7071, 0, 0, 0.7071],
+##  shape: box,
+##  size: [0.15, 0.10, 0.06],
+##  color: [0.6, 0.3, 0.1],
+##  contact: 1
+##}
+
+post: {
+    pose: [-0.2, 0.2, 0.8], 
+    shape: cylinder, 
+    size: [0.4 0.05], 
+    color: [1, 1, 1], 
+    contact: 1, 
+    friction: 0.1 
 }
