@@ -27,3 +27,12 @@ shoeboxObstacle(world): {
   color: [0.6, 0.3, 0.1],
   contact: 1
 }
+
+tower(world):{
+  pose: [-0.2, 0.3, .85],
+  shape: cylinder,
+  size: [0.4, 0.05],
+  color: [1, .8, .7],
+  contact: 1,
+  friction: 0.1
+}
