@@ -12,7 +12,10 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     tol_fingertip = 0.1
     cup_size = cup.getSize()[0] + tol_fingertip
 
-    target_height = table_height + 0.8                                            # 0.8 is more safe
+    if ball_position[2] < 0.7:
+        target_height = table_height + 0.7                                            # 0.8 is more safe
+    else: 
+        target_height = table_height + ball_position[2]
     target_position = np.array([ball_position[0] + cup_size / 2, ball_position[1] - 0.1, target_height])
 
     # Chose end_effector
@@ -34,10 +37,18 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)                    # Do not self collide
 
     # Constraints on end_effector orientation
+    # Camera facing upwards
     komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
-    komo.addObjective([1], ry.FS.scalarProductYZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
-    komo.addObjective([1], ry.FS.scalarProductXZ, [end_effector, 'world'], ry.OT.eq, [1e1], [0])
+    komo.addObjective([1], ry.FS.scalarProductYX, ['world', end_effector], ry.OT.eq, [1e1], [-1])
+    komo.addObjective([1], ry.FS.scalarProductXZ, ['world', end_effector], ry.OT.eq, [1e1], [1])
 
+    # # Camera facing downwards
+    # komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
+    # komo.addObjective([1], ry.FS.scalarProductYZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
+    # komo.addObjective([1], ry.FS.scalarProductXZ, [end_effector, 'world'], ry.OT.eq, [1e1], [0])
+
+
+    # print("POSITION:::", C.getFrame('target').getPosition())    
     komo.addObjective([1], ry.FS.positionDiff, [end_effector,'target'], ry.OT.eq, [1e1])     # try to reach target immediately
 
     return komo
