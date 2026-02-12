@@ -43,7 +43,7 @@ class SceneBuilder():
         # Build robot environment
         self.C.addFile(self.scenario)
         self.C.delFrame("panda_collCameraWrist")
-        self.C.addFrame('world_marker'). setShape(ry.ST.marker, [.1]) .setPosition(self.C.getFrame('world').getPosition())
+        self.C.addFrame('world_marker').setShape(ry.ST.marker, [.1]).setPosition(self.C.getFrame('world').getPosition())
         # Add objects and camera from config
         self.C.addFile(self.scene_config)
 
@@ -62,6 +62,7 @@ class SceneBuilder():
         # Setup cup pose
         cup.setRelativePosition([-0.02, -0.035, 0.065]) 
         cup.setQuaternion(q_cup.tolist())
+        self.C.addFrame('cup_marker').setShape(ry.ST.marker, [.1]).setPosition(cup.getPosition())
 
         if self.preview():
             return self.C
