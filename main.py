@@ -48,7 +48,7 @@ def main(args):
 
     bot = ry.BotOp(C=C, useRealRobot=args.real)
 
-    # ==== Choose input camera ===
+    # === Choose input camera ===
     if args.input == "standalone":
         camera = RealSense()
         print("Using default camera parameters.")
