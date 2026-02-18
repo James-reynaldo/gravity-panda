@@ -1,11 +1,11 @@
-import argparse
 import robotic as ry
 import numpy as np
-from typing import List
-import time
+
 
 def setup_komo(C: ry.Config, n_phases, ball_position):
-# Compute push parameters
+    """Setup constraints for the gripper."""
+    
+    # Compute push parameters
     table = C.getFrame("table")
     table_height = table.getSize()[2] * 0.5
     cup = C.getFrame("cup")
@@ -29,15 +29,15 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     komo.setConfig(C, True)
     komo.setTiming(phases=n_phases, slicesPerPhase=8, durationPerPhase=1.0,kOrder=2)
   
-    # Constrains on system
-    komo.addControlObjective([], 2, 1e-1)
+    # Constraints on system
+    komo.addControlObjective([], 2, 1e-1)                                               # Penalize accelleration
     komo.addControlObjective([], 1, 1e0)                                                # Penalize velocity
     komo.addControlObjective([], 0, 1e-1)                                               # Penalize joint motion magnitude
     komo.addObjective([], ry.FS.jointLimits, [], ry.OT.ineq, [1e1])                     # Do not exceed robots joint limits
     komo.addObjective([], ry.FS.accumulatedCollisions, [], ry.OT.eq)                    # Do not self collide
 
     # Constraints on end_effector orientation
-    # Camera facing upwards
+    # WristCamera facing upwards
     komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
     komo.addObjective([1], ry.FS.scalarProductYX, ['world', end_effector], ry.OT.eq, [1e1], [-1])
     komo.addObjective([1], ry.FS.scalarProductXZ, ['world', end_effector], ry.OT.eq, [1e1], [1])
@@ -46,14 +46,16 @@ def setup_komo(C: ry.Config, n_phases, ball_position):
     # komo.addObjective([1], ry.FS.scalarProductZZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
     # komo.addObjective([1], ry.FS.scalarProductYZ, ['world', end_effector], ry.OT.eq, [1e1], [0])
     # komo.addObjective([1], ry.FS.scalarProductXZ, [end_effector, 'world'], ry.OT.eq, [1e1], [0])
-
-
-    # print("POSITION:::", C.getFrame('target').getPosition())    
+   
     komo.addObjective([1], ry.FS.positionDiff, [end_effector,'target'], ry.OT.eq, [1e1])     # try to reach target immediately
 
     return komo
 
 def get_path_from_komo(komo=None, display:bool=False):
+    """
+    Calculate robot path form given komo solver.
+    
+    """
     sol = ry.NLP_Solver()
     sol.setProblem(komo.nlp())
     sol.setOptions(damping=1e-1, verbose=0, stopTolerance=1e-2, stopInners=100, stopEvals=1000)
@@ -67,8 +69,8 @@ def get_path_from_komo(komo=None, display:bool=False):
     
     # Check if solution is feasible
     if not ret.feasible:
-        print("Solution is not feasible. Skipping...")
         return None
+    
     print("Solution is feasible.")
 
     return path

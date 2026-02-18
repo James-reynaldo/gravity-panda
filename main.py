@@ -16,14 +16,19 @@ from motion import komo_planner as planner
 _stop_event = threading.Event()
 
 def handle_sigint(signum, frame):
+    """
+    Handling SIGINT by our own makes it posisble to replace the cup to it's initial position and return home. 
+    After that everything is closed and exited properly.
+    
+    """
     print("\nSIGINT received (Ctrl+C). Cleaning up...")
     global _stop_event
     _stop_event.set()
 
 def main(args):
-    print("[Args: ", args, " ]")
+    global _stop_event
 
-    # Global parameters that can influence the friction, grasp force, etc.
+    # Global ry parameters that can influence the friction, grasp force, etc.
     ry.params_add(
         {
             "physx/angularDamping": 0.1,
@@ -33,12 +38,12 @@ def main(args):
         }
     )  
 
-    global _stop_event
+    
 
     # Register signal handler
     signal.signal(signal.SIGINT, handle_sigint)
 
-    # === Build simulation environment ===
+    # Build simulation environment
     C = SceneBuilder(ry.raiPath("scenarios/pandaSingle.g"), "./config/config_gp.g").build()
 
     if C is None:
@@ -48,7 +53,7 @@ def main(args):
 
     bot = ry.BotOp(C=C, useRealRobot=args.real)
 
-    # === Choose input camera ===
+    # Choose input camera
     if args.input == "standalone":
         camera = RealSense()
         print("Using default camera parameters.")
@@ -59,13 +64,13 @@ def main(args):
         camera = RobotCamera(C, bot, args.input)
         camera.open(display=args.display, rotate=args.rotate)
 
-    # === Initialize detector ===
+    # Initialize detector
     detector = BallDetector(camera=camera, display=args.display)
     if args.detectonly:
         detector.run()
         exit(0)
 
-    # === Start from home === 
+    # Start from home
     if  args.botop:
         print("Moving home.")
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
@@ -83,7 +88,7 @@ def main(args):
     C.addFrame('target').setShape(ry.ST.marker, [.1]) 
     C.addFrame('world_frame').setShape(ry.ST.marker, [.1]).setPosition(C.getFrame('world').getPosition())
 
-    # === Grab cup ===
+    # Grab cup
     cup_postition = [-0.35, 0.64, .71]
     komo = planner.setup_komo(C, 1, cup_postition)
     path = planner.get_path_from_komo(komo, True)
@@ -96,9 +101,8 @@ def main(args):
         bot.gripperClose(ry.ArgWord._left)
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
 
-    # =================
-    # === MAIN LOOP ===
-    # =================
+    ### MAIN LOOP ###
+
     while not _stop_event.is_set():
         # Grab frame
         rgb, depth = camera.grab_once()
@@ -112,7 +116,8 @@ def main(args):
         # Get real world coordinates from pixels
         ball_position = detector.get_world_from_camera(ball, depth, camera.K, camera.rotation, camera.coordinates)
 
-    # for ball_position in test_ball_positions:
+        # # For testing robot following ball positions, use this for loop instead of while.
+        # for ball_position in test_ball_positions:
         if ball_position is None:
             print("No ball position.")
             time.sleep(0.1)
@@ -125,6 +130,7 @@ def main(args):
         
         if path is None:
             # Solution not feasible -> skip.
+            print("Solution is not feasible. Skipping...")
             continue
 
         # Execute path with botop or in simulation
@@ -137,13 +143,13 @@ def main(args):
             sim = SimWrapper(C, display_delay=0.1)
             sim.run_trajectory(path, n_phases)
             time.sleep(1)
-            # sim.reset()
+
         time.sleep(1)
         komo.clearObjectives()
 
     
 
-    # === Put cup back ===
+    # SIGINT received: Put cup back
     cup_postition = [-0.35, 0.64, .71]
     komo = planner.setup_komo(C, 1, cup_postition)
     path = planner.get_path_from_komo(komo, True)
@@ -156,12 +162,13 @@ def main(args):
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
         bot.gripperMove(ry.ArgWord._left, 0.07)
 
-        # ===  End at home === 
+        # Move robot to home position
         print("Returning home...")
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
         bot.moveTo(q_home)
         bot.wait(C, forKeyPressed=False, forTimeToEnd=True)
 
+    # Exit program
     camera.close()
 
     del bot
@@ -171,13 +178,12 @@ def main(args):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--input", type=str, default="top", help="Select camera: wrist, top or standalone")
+    p.add_argument("--input", type=str, default="top", help="Select camera: wrist, top or standalone.")
     p.add_argument("--botop", action="store_true", default=False, help="Use botop in addition to the simulator for a comparison.")
-    p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used")  # Use this arg to run on the real robot    
-    p.add_argument("--display", action="store_true", default=False, help="Show camera view")
-    p.add_argument("--segment", action="store_true", default=False, help="Run instance segmentation to locate an object")
-    p.add_argument("--detectonly", action="store_true", default=False, help="")
-    p.add_argument("--rotate", action="store_true", default=False, help="")
+    p.add_argument("--real", action="store_true", default=False, help="Use this arg if real robot is used.")  # Use this arg to run on the real robot    
+    p.add_argument("--display", action="store_true", default=False, help="Display camera frames.")
+    p.add_argument("--detectonly", action="store_true", default=False, help="Use only ball detector without moving the robot")
+    p.add_argument("--rotate", action="store_true", default=False, help="Rotate camera frame by 180deg.")
 
     args = p.parse_args()
 

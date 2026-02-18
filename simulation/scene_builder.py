@@ -2,11 +2,12 @@ import numpy as np
 import robotic as ry
 from typing import List, Any, Optional
 
-
-
-
 class SceneBuilder():
     def __init__(self, scenario_path:str, scene_config_path:str ) -> None:
+        """
+        Build a ry-Scene from config file.
+        
+        """
         self.C :ry.Config = None
         self.scenario = scenario_path
         self.scene_config = scene_config_path
@@ -40,10 +41,12 @@ class SceneBuilder():
     def build(self) -> Optional[ry.Config]:
         # Create ry Config
         self.C = ry.Config()
+
         # Build robot environment
         self.C.addFile(self.scenario)
         self.C.delFrame("panda_collCameraWrist")
         self.C.addFrame('world_marker').setShape(ry.ST.marker, [.1]).setPosition(self.C.getFrame('world').getPosition())
+        
         # Add objects and camera from config
         self.C.addFile(self.scene_config)
 

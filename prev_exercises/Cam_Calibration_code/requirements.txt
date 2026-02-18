@@ -1,7 +1,0 @@
-matplotlib==3.10.7
-opencv-contrib-python==4.12.0.88
-pip==22.0.2
-pyrealsense2==2.56.5.9235
-robotic==0.3.4
-setuptools==59.6.0
-wheel==0.37.1

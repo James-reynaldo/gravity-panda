@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import robotic as ry
-from typing import Union, List, Any
+from typing import Union
 
 class SimWrapper:
     def __init__(self, C: ry.Config, sim_tau: float = 3e-2, display_delay: float = 1e-1, verbose: int = 2):
@@ -42,13 +42,7 @@ class SimWrapper:
             self.step([], ry.ControlMode.none)
 
     def run_trajectory(self, path: Union[np.ndarray, list], n_phases: int):
-        """Run a full trajectory.
-
-        Params:
-            path: The full sequence of control targets.
-            n_phases: How many phases should be used,
-                determines the coarseness of the simulation.
-        """
+        """Run a full trajectory."""
         path = np.atleast_2d(path)
         path_len = len(path)
         phases = np.linspace(n_phases / path_len, n_phases, path_len)

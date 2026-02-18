@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
 import robotic as ry
 import threading
-from object_detector.aruco_detector import detect_aruco_markers
 
 @dataclass
 class Component:
@@ -24,6 +23,11 @@ class Component:
 
 class BallDetector():
     def __init__(self, camera, modelpath="./yolo/ball_with_aruco_n.pt", display=False) -> None:
+        """
+        Ball detector uses the camera to grab frames. 
+        Then predicts, classifies and finally transforms pixel into real world coordinates.
+        
+        """
         # --- Setup camera ---
         self.camera = camera
         self.K = camera.K
@@ -59,8 +63,6 @@ class BallDetector():
                     self.current_ball_coor = None
                     
         cv.destroyAllWindows()
-                
-
 
     def predict_frame(self, frame, confidence):
         """Predict objects in a camera frame and returns the predicted results."""
@@ -80,7 +82,7 @@ class BallDetector():
             return None
 
         for result in results:
-            names = result.names  # FIX: cache names once
+            names = result.names
             for box in result.boxes:
                 cls_id = int(box.cls[0])
                 component = Component(names[cls_id], float(box.conf[0]), box.xyxy[0].tolist())
@@ -90,6 +92,7 @@ class BallDetector():
     
     def show_result(self, frame, ball= None):
         if ball is not None:
+            # Draw bbox
             x1, y1, x2, y2 = map(int, ball.bbox)
             cv.circle(frame, (320, 180), 4, (0, 0, 255), -1)
             cv.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
@@ -97,7 +100,7 @@ class BallDetector():
                         (x1, y1 - 10),
                         cv.FONT_HERSHEY_SIMPLEX,
                         0.6, (255, 0, 0), 2)
-            # Draw center point
+            # Draw center
             cx, cy = map(int, ball.center)
             cv.circle(frame, (cx, cy), 2, (0, 255, 255), -1)
 
@@ -126,8 +129,6 @@ class BallDetector():
     def get_world_from_camera(self, ball:Component, depth: np.ndarray,
                             K: np.ndarray, camera_rot: np.ndarray, 
                             camera_coor: np.ndarray) -> Optional[np.ndarray]:
-
-        # Placeholder for actual implementation
         u = int(ball.center[0])
         v = int(ball.center[1])
         if depth is not None and not any(i is None for i in [u,v]):
