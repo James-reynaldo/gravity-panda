@@ -1,9 +1,14 @@
 [project]
 name = "gravity-panda"
 version = "0.1.0"
-description = "Add your description here"
+description = "Franka Panda robot catching a ball with a cup using YOLO ball detection and KOMO motion optimization."
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    { name = "James Reynaldo" },
+    { name = "Phil Garweg" },
+    { name = "Stephanie Day" },
+]
 dependencies = [
     "matplotlib>=3.10.8",
     "numpy>=2.2.6",
@@ -11,9 +16,4 @@ dependencies = [
     "pyrealsense2>=2.56.5.9235",
     "robotic>=0.3.5",
     "ultralytics>=8.4.14",
-]
-
-[tool.uv.workspace]
-members = [
-    "windows",
 ]
